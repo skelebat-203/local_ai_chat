@@ -5,7 +5,6 @@ Loads persona files, context instructions, and chat logs
 import os
 from pathlib import Path
 
-
 class ContextRetriever:
     def __init__(self, base_path="Chat_App"):
         self.base_path = Path(base_path)

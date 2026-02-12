@@ -5,7 +5,6 @@ Saves conversation logs to appropriate context folders
 from pathlib import Path
 from datetime import datetime
 
-
 class ChatLogger:
     def __init__(self, base_path="Chat_App"):
         self.base_path = Path(base_path)

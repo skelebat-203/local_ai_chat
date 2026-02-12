@@ -6,7 +6,6 @@ from retriever import ContextRetriever
 from chat import ChatSession
 from logger import ChatLogger
 
-
 def print_welcome():
     """Print welcome message and instructions"""
     print("=" * 60)

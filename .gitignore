@@ -1,6 +1,7 @@
 # Log files
 *.log
 logs/
+for_ai/
 
 # Other common excludes
 __pycache__/

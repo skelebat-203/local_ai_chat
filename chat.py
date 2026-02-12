@@ -4,7 +4,6 @@ Handles conversation flow and AI interactions with Ollama
 """
 import ollama
 
-
 class ChatSession:
     def __init__(self, model="llama3"):
         self.conversation_history = []
