@@ -1,3 +1,9 @@
+# Local Perplexity clone
+There are 3 reasons for this project.
+1. I want a local chat interface I control
+2. I want to learn some skills
+3. I wnat to brushup on other skills
+
 ## main.py main_streaming.py
 This is UX thing. 
 - main.py runs with no indication the chatbot is doing anything. Then, prints the response all at once.
@@ -81,9 +87,8 @@ Holds links to websites, and possilly system files.
 Previous chats that relate the the subject.
 
 
-
 ## For AI Assistant
-A text version of all program files has been uploaded as source documents (example: chat.txt is a copy of chat.py). The assisant should use the .txt docs as reference for the source code as of the start to that day. 
+A text version of all program files has been uploaded as source documents (example: chat.txt is a copy of chat.py). The assisant should use the .txt docs as reference for the source code as of the start of the current day. 
 
 When writing code the AI assistant's output should be in py format and when applicable in a py file.
 ### Current copies
