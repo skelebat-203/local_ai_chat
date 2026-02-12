@@ -3,6 +3,7 @@ import os
 import time
 import shutil
 from pathlib import Path
+from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -30,14 +31,30 @@ class PyFileHandler(FileSystemEventHandler):
         if self.for_ai_dir in py_file.parents:
             return
         
-        # Create corresponding .txt filename
-        txt_filename = py_file.stem + '.txt'
+        # Skip the watcher script itself
+        if py_file.name == 'file_watcher.py':
+            return
+        
+        # Delete any existing .txt files for this .py file (ignore timestamps)
+        base_name = py_file.stem
+        for existing_file in self.for_ai_dir.glob(f"{base_name}_*.txt"):
+            try:
+                existing_file.unlink()
+                print(f"✗ Deleted old version: {existing_file.name}")
+            except Exception as e:
+                print(f"✗ Error deleting {existing_file.name}: {e}")
+        
+        # Create timestamp in yyyy-mm-dd-hh-mm format
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M')
+        
+        # Create corresponding .txt filename with timestamp
+        txt_filename = f"{base_name}_{timestamp}.txt"
         txt_file = self.for_ai_dir / txt_filename
         
         try:
             # Copy contents from .py to .txt
             shutil.copy2(py_file, txt_file)
-            print(f"✓ Copied {py_file.name} → {txt_file}")
+            print(f"✓ Created {txt_filename}")
         except Exception as e:
             print(f"✗ Error copying {py_file.name}: {e}")
 
@@ -63,4 +80,4 @@ def main():
     observer.join()
 
 if __name__ == "__main__":
-    main()
+    main() 
