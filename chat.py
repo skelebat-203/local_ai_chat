@@ -77,6 +77,10 @@ class ChatSession:
         """Clear conversation history (useful when switching subjects)"""
         self.conversation_history = []
     
+    def load_history(self, conversation_history):
+        """Load conversation history from a saved chat file"""
+        self.conversation_history = conversation_history
+    
     def get_history_for_logging(self):
         """Format conversation history for logging"""
         log_text = []

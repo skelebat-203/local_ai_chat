@@ -6,23 +6,45 @@ class SubjectRetriever:
         self.basepath = Path(basepath)
         self.personas_path = self.basepath / "personas"
         self.subjects_path = self.basepath / "subjects"
+        self.default_persona = "default"
+        self.default_subject = "no_subject"
     
-    def load_persona(self, persona_name):
-        """Load persona instructions from personas folder"""
+    def load_persona(self, persona_name=None):
+        """Load persona instructions from personas folder, defaults to default.md"""
+        if persona_name is None:
+            persona_name = self.default_persona
+        
         persona_file = self.personas_path / f"{persona_name.lower()}.md"
         if persona_file.exists():
             with open(persona_file, 'r', encoding='utf-8') as f:
                 return f.read()
         else:
+            # Try to load default persona if requested persona doesn't exist
+            if persona_name != self.default_persona:
+                default_file = self.personas_path / f"{self.default_persona}.md"
+                if default_file.exists():
+                    print(f"⚠ Persona '{persona_name}' not found, using default")
+                    with open(default_file, 'r', encoding='utf-8') as f:
+                        return f.read()
             raise FileNotFoundError(f"Persona '{persona_name}' not found at {persona_file}")
     
-    def load_subject_instructions(self, subject_name):
-        """Load instructions.md from specific subject folder"""
+    def load_subject_instructions(self, subject_name=None):
+        """Load instructions.md from specific subject folder, defaults to no_subject"""
+        if subject_name is None:
+            subject_name = self.default_subject
+        
         instructions_file = self.subjects_path / subject_name / "instructions.md"
         if instructions_file.exists():
             with open(instructions_file, 'r', encoding='utf-8') as f:
                 return f.read()
         else:
+            # Try to load default subject if requested subject doesn't exist
+            if subject_name != self.default_subject:
+                default_file = self.subjects_path / self.default_subject / "instructions.md"
+                if default_file.exists():
+                    print(f"⚠ Subject '{subject_name}' not found, using default")
+                    with open(default_file, 'r', encoding='utf-8') as f:
+                        return f.read()
             raise FileNotFoundError(f"Instructions for subject '{subject_name}' not found at {instructions_file}")
     
     def load_chat_logs(self, subject_name):
@@ -31,17 +53,15 @@ class SubjectRetriever:
         chat_logs = []
         
         if subject_folder.exists():
-            # Load chatlog.md if it exists
             chatlog_file = subject_folder / "chatlog.md"
             if chatlog_file.exists():
                 with open(chatlog_file, 'r', encoding='utf-8') as f:
                     content = f.read()
-                    if content.strip():  # Only add if not empty
+                    if content.strip():
                         chat_logs.append(content)
             
-            # Load any other chat log files (chat_*.md pattern)
             for file in sorted(subject_folder.glob("chat_*.md")):
-                if file.name != "chatlog.md":  # Avoid duplicate
+                if file.name != "chatlog.md":
                     with open(file, 'r', encoding='utf-8') as f:
                         content = f.read()
                         if content.strip():
@@ -49,11 +69,15 @@ class SubjectRetriever:
         
         return "\n---\n".join(chat_logs) if chat_logs else ""
     
-    def build_system_prompt(self, persona_name, subject_name):
+    def build_system_prompt(self, persona_name=None, subject_name=None):
         """Build complete system prompt with persona and subject"""
         persona = self.load_persona(persona_name)
         instructions = self.load_subject_instructions(subject_name)
-        chat_history = self.load_chat_logs(subject_name)
+        
+        # Only load chat history if subject is explicitly provided
+        chat_history = ""
+        if subject_name and subject_name != self.default_subject:
+            chat_history = self.load_chat_logs(subject_name)
         
         system_prompt = f"""# Persona
 {persona}
@@ -77,7 +101,6 @@ class SubjectRetriever:
             subject = None
             prompt_parts = []
             
-            # Split by comma but handle the prompt part carefully
             parts = user_input.split(',')
             for i, part in enumerate(parts):
                 part_lower = part.strip().lower()
@@ -86,7 +109,6 @@ class SubjectRetriever:
                 elif part_lower.startswith("subject"):
                     subject = part.split(':', 1)[1].strip()
                 else:
-                    # Everything after persona/subject is the prompt
                     prompt_parts.append(part.strip())
             
             prompt = ', '.join(prompt_parts).strip()
@@ -105,3 +127,125 @@ class SubjectRetriever:
         if self.subjects_path.exists():
             return [d.name for d in self.subjects_path.iterdir() if d.is_dir()]
         return []
+    
+    def list_all_chats(self):
+        """List all chat files across all subjects with timestamps
+        Returns: list of tuples (subject_name, chat_filename, file_path)
+        """
+        all_chats = []
+        if self.subjects_path.exists():
+            for subject_dir in self.subjects_path.iterdir():
+                if subject_dir.is_dir():
+                    for chat_file in sorted(subject_dir.glob("chat_*.md")):
+                        all_chats.append((subject_dir.name, chat_file.name, chat_file))
+        # Sort by timestamp (filename contains timestamp)
+        all_chats.sort(key=lambda x: x[1])
+        return all_chats
+    
+    def list_chats_by_subject(self, subject_name):
+        """List all chat files in a specific subject folder
+        Returns: list of tuples (chat_filename, file_path)
+        """
+        chats = []
+        subject_folder = self.subjects_path / subject_name
+        if subject_folder.exists():
+            for chat_file in sorted(subject_folder.glob("chat_*.md")):
+                chats.append((chat_file.name, chat_file))
+        # Sort by timestamp
+        chats.sort(key=lambda x: x[0])
+        return chats
+    
+    def load_chat_file(self, chat_file_path):
+        """Load a specific chat file and parse it into conversation history
+        Returns: list of message dictionaries
+        """
+        conversation_history = []
+        
+        try:
+            with open(chat_file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception as e:
+            print(f"Error reading chat file: {e}")
+            return []
+        
+        # Parse the markdown format back into conversation history
+        lines = content.split('\n')
+        current_role = None
+        current_content = []
+        
+        for line in lines:
+            # Check for both formats: **User:** and **user:**
+            if line.strip().lower().startswith('**user:**'):
+                if current_role and current_content:
+                    conversation_history.append({
+                        "role": current_role,
+                        "content": '\n'.join(current_content).strip()
+                    })
+                current_role = "user"
+                current_content = []
+            elif line.strip().lower().startswith('**assistant:**'):
+                if current_role and current_content:
+                    conversation_history.append({
+                        "role": current_role,
+                        "content": '\n'.join(current_content).strip()
+                    })
+                current_role = "assistant"
+                current_content = []
+            elif current_role is not None:
+                # Only add content if we've identified a role
+                current_content.append(line)
+        
+        # Add the last message
+        if current_role and current_content:
+            conversation_history.append({
+                "role": current_role,
+                "content": '\n'.join(current_content).strip()
+            })
+        
+        # Debug: print what was loaded
+        print(f"Loaded {len(conversation_history)} messages from chat file")
+        
+        # Ensure we always return a list, even if empty
+        return conversation_history if conversation_history else []
+
+    def create_subject_folder(self, subject_name):
+        """
+        Create a new subject folder.
+        
+        Args:
+            subject_name: Name of the subject folder to create
+            
+        Returns:
+            bool: True if created, False if already exists
+        """
+        subject_path = self.subjects_path / subject_name
+        
+        # Check if subject already exists
+        if subject_path.exists():
+            return False
+        
+        # Create the subject folder
+        subject_path.mkdir(parents=True, exist_ok=True)
+        return True
+
+    def save_subject_instructions(self, subject_name, instructions):
+        """
+        Save instructions for a subject.
+        
+        Args:
+            subject_name: Name of the subject
+            instructions: Instructions text to save
+        """
+        subject_path = self.subjects_path / subject_name
+        
+        # Ensure subject folder exists
+        if not subject_path.exists():
+            subject_path.mkdir(parents=True, exist_ok=True)
+        
+        # Save instructions.md file
+        instructions_file = subject_path / "instructions.md"
+        with open(instructions_file, 'w', encoding='utf-8') as f:
+            f.write(f"# {subject_name} Instructions\n\n")
+            f.write(instructions)
+        
+        return instructions_file

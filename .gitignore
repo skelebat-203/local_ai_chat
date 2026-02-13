@@ -2,7 +2,10 @@
 *.log
 logs/
 for_ai/
+subjects/*/chat_*.md
 
 # Other common excludes
 __pycache__/
 
+#Test files
+temp_test.py

@@ -32,8 +32,8 @@ class PyFileHandler(FileSystemEventHandler):
             return
         
         # Skip the watcher script itself
-        if py_file.name == 'file_watcher.py':
-            return
+        # if py_file.name == 'file_watcher.py':
+        #     return
         
         # Delete any existing .txt files for this .py file (ignore timestamps)
         base_name = py_file.stem

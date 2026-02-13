@@ -1,4 +1,4 @@
-# Local Perplexity clone
+## Local Perplexity clone
 There are 3 reasons for this project.
 1. I want a local chat interface I control
 2. I want to learn some skills
@@ -21,13 +21,12 @@ Chat_app/
 - Set subject
 - Store subject related chat in subject log
 - Retrieve subject instructions and chat logs
-
-### Upcoming Features
 - Create undefined subject folder and instructions
 - Allow users to chat without defining a subject
 - View chats, all and within a specific subject
 - Allow creation of new subject
-- Allow option to create subject instructions
+
+### Upcoming Features
 - Sources docs for specific subjects 
 - Sources links doc for specific subjects
 
