@@ -2,49 +2,61 @@
 There are 3 reasons for this project.
 1. I want a local chat interface I control
 2. I want to learn some skills
-3. I wnat to brushup on other skills
+3. I want to brushup on other skills
 
-## Log Structure
-**Chat_app**
-- subjects
-    - fantasy_story
-        - instructions.md
-        - [chat_01]
-        - ...
-    - scifi_story
-        - instructions.md
-        - [chat_01]
-        - ...
-- personas
-    - writer.md
-    - [other_persona]
-    - [other_persona]
-    - ...
-### Personas
-Holds the different types of personalities I want to choose from.
-- GM
-- Teacher
-- Writer
-- etc.
-### Contexts
+## Chat Logs
+Sort historic chats are sorted by subject.
+
+## Subjects
 Holds a number of subject folders: my_novel, coding_project_01, etc.  In each subject folder is a sources_docs folder, links.txt, an instructions.md file, and chat logs related to that subject.
 
-#### Sources
-Holds a file for any source uploaded to the 
+### Structure
+Chat_app/
+├── subjects/
+│   └── [subject_folder]/
+│       ├── instructions.md
+│       └── chat_[time_stamp].md
 
-#### Instructions.md
-This holds all instructions for a specific topic
+### Current Features
+- Set subject
+- Store subject related chat in subject log
+- Retrieve subject instructions and chat logs
 
-**Example:** Use the source docs and links as your primary sources...
+### Upcoming Features
+- Create undefined subject folder and instructions
+- Allow users to chat without defining a subject
+- View chats, all and within a specific subject
+- Allow creation of new subject
+- Allow option to create subject instructions
+- Sources docs for specific subjects 
+- Sources links doc for specific subjects
 
-#### Sources_docs - TBD
-Holds source docs related to the subject: current novel doc, source code, etc.
+#### Future structure update
+Chat_app/
+├── subjects/
+│   └── [subject_folder]/
+│       ├──[sources_folder]/
+│           ├── instructions.md
+│           ├── links.md
+│           ├── [source_doc]
+│           └── [source_doc]
+│       └── chat_[time_stamp].md
 
-#### Links.txt - TBD
-Holds links to websites, and possilly system files.
+## Personas
+Holds the different types of personalities the user can choose from.
 
-#### Chat logs
-Previous chats that relate the the subject.
+### Structure
+Chat_app/
+├── personas/
+│   └── [persona].md
+
+### Current Features
+- Set subject
+
+### Upcoming Features
+- Create a default person that I like
+- Allow users to chat without defining a persona
+- Allow modification of a persona
 
 ## Python files
 ### main.py main_streaming.py
@@ -64,29 +76,9 @@ This is curently how I am saving and sorting the current chat once I type /exit
 ### retriever.py
 This currently grabs the persona and context when the user requests it.
 
-## Future Functions
-### Persona - TBD
-TBD - plan this to create new personas
-- Create Persona file
-- Write persona instructions to the file
+### file_watcher.py
+Watch for when a python file is saved. When a file is saved. Copy the file in .txt format with a timestamp. Delete old .txt version if one exists. The chat service I am using to help with the project cannot store / "see" .py files. This script exists as a workaround for that bug. 
 
-### New Subject - TBD
-TBD - plan this to create new subjects
-- Create Subject folder
-- Write subject instructions file
-- add Sources and links
-
-### Delete - TBD
-- Delete Persona
-- Delete Subject
-- Delete Chat
-
-### Modify - TBD
-- Modify Persona
-- Modify Subject
-    - name
-    - instructions
-- Modify Chat - add a title for easier reference
 
 ## For AI Assistant
 A text version of all program files has been uploaded as source documents (example: chat_[time-stamp].txt is a copy of chat.py). The assisant should use the .txt docs as reference for the source code as of the start of the current day. 
@@ -98,3 +90,20 @@ When writing code the AI assistant's output should be in py format and when appl
 - chat_[time-stamp].txt = chat.py
 - logger_[time-stamp].txt = logger.py
 - retriever_[time-stamp].txt = retriever.py
+
+### App Structure
+Chat_app/
+├── for_ai/
+│   └── [python_file].txt
+├── personas/
+│   └── [persona].md
+├── subjects/
+│   └── [subject_folder]/
+│       ├── instructions.md
+│       └── chat_[timestamp].md
+├── chat.py
+├── file_watcher.py
+├── logger.py
+├── main_streaming.py
+├── main.py
+└── retriever.py
