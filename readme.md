@@ -62,12 +62,8 @@ Chat_app/
 - Allow deletion of a persona
 
 ## Python files
-### main.py main_streaming.py
-This is UX thing. I'll clean it up when I do my 1st code clean. Get in there with the bleach and scouring pad.
-- main.py runs with no indication the chatbot is doing anything. Then, prints the response all at once.
-- main_streaming.py slowly prints the response, more human like.
-
-run with `python3 main.py` or `python3 main_streaming.py`
+### main.py
+Manages the app.
 
 ### chat.py
 Chat logic: sending messages, receiving responses, managing conversation flow
