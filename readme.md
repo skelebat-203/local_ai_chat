@@ -2,7 +2,24 @@
 There are 3 reasons for this project.
 1. I want a local chat interface I control
 2. I want to learn some skills
-3. I want to brushup on other skills
+3. I want to brushup on other 
+
+## Updates needed reach version 1 (.v01) milestone
+1. Refactor the folder structure
+2. Add the ability to see and update subject and persona instructions
+3. Add the ability to move chats to other subjects
+4. Add the ability to delete chats, subjects, and persona
+5. Add chat title
+   - On save Title = 1st 10 words of chat.
+   - add command "/update_title"
+      - display the existing title.
+      - user can update the title at anytime.
+6. "/chat_history" and "/chat_history [subject]" better formated chat names
+   - "/chat_history" Format: [number] [title] [subject] [hh:mm] [yyyy-mm-dd]
+   - "/chat_history [subject]" Format: [title] [hh:mm] [yyyy-mm-dd]
+   - still want to select a chat by the displayed list item number
+7. Milestone 1 complete
+   - Milestone 2 will be an app UI. So, Users aren't workin gin terminal.
 
 ## Chat Logs
 Sort historic chats are sorted by subject.
@@ -78,6 +95,103 @@ This currently grabs the persona and context when the user requests it.
 ### file_watcher.py
 Watch for when a python file is saved. When a file is saved. Copy the file in .txt format with a timestamp. Delete old .txt version if one exists. The chat service I am using to help with the project cannot store / "see" .py files. This script exists as a workaround for that bug. 
 
+### Planned App Structure
+I'm working on it...  I build a while. If I'm still interested in a few weeks, I fix the structure. I should have this cleaned up / refactored over the next week.
+
+local_ai_chat/
+├── backend/
+│   ├── src/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── commands/
+│   │   │   ├── __init__.py
+│   │   │   ├── command_handler.py
+│   │   │   ├── chat_commands.py
+│   │   │   └── subject_commands.py
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── chat.py
+│   │   │   ├── logger.py
+│   │   │   └── retriever.py
+│   │   ├── utils/
+│   │   │   ├── __init__.py
+│   │   │   ├── file_watcher.py
+│   │   │   └── ui.py
+│   │   └── api/
+│   │       ├── __init__.py
+│   │       └── routes.py
+│   ├── data/
+│   │   ├── personas/
+│   │   │   └── [persona].md
+│   │   └── subjects/
+│   │       └── [subject_folder]/
+│   │           ├── instructions.md
+│   │           ├── sources/
+│   │           │   └── [source_docs]
+│   │           ├── links.md
+│   │           └── chat_[timestamp].md
+│   ├── tests/
+│   │   ├── __init__.py
+│   │   ├── test_chat.py
+│   │   ├── test_logger.py
+│   │   └── test_retriever.py
+│   ├── requirements.txt
+│   └── README.md
+├── frontend/
+│   ├── public/
+│   │   ├── index.html
+│   │   └── favicon.ico
+│   ├── src/
+│   │   ├── assets/
+│   │   │   ├── images/
+│   │   │   └── fonts/
+│   │   ├── components/
+│   │   │   ├── Chat/
+│   │   │   │   ├── ChatWindow.tsx
+│   │   │   │   ├── MessageList.tsx
+│   │   │   │   └── InputBox.tsx
+│   │   │   ├── Sidebar/
+│   │   │   │   ├── SubjectList.tsx
+│   │   │   │   └── PersonaSelector.tsx
+│   │   │   └── Common/
+│   │   │       ├── Button.tsx
+│   │   │       └── Modal.tsx
+│   │   ├── pages/
+│   │   │   ├── ChatPage.tsx
+│   │   │   ├── SettingsPage.tsx
+│   │   │   └── HistoryPage.tsx
+│   │   ├── services/
+│   │   │   ├── api.ts
+│   │   │   └── chatService.ts
+│   │   ├── styles/
+│   │   │   ├── main.scss
+│   │   │   ├── variables.scss
+│   │   │   └── components/
+│   │   │       ├── chat.scss
+│   │   │       └── sidebar.scss
+│   │   ├── types/
+│   │   │   ├── chat.ts
+│   │   │   └── persona.ts
+│   │   ├── utils/
+│   │   │   └── helpers.ts
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   └── README.md
+├── for_ai/
+│   └── [python_file_timestamp].txt
+├── docs/
+│   ├── api_documentation.md
+│   ├── setup_guide.md
+│   └── architecture.md
+├── .gitignore
+├── .env.example
+├── docker-compose.yml
+└── README.md
+
 
 ## For AI Assistant
 A text version of all program files has been uploaded as source documents (example: chat_[time-stamp].txt is a copy of chat.py). The assisant should use the .txt docs as reference for the source code as of the start of the current day. 
@@ -90,7 +204,7 @@ When writing code the AI assistant's output should be in py format and when appl
 - logger_[time-stamp].txt = logger.py
 - retriever_[time-stamp].txt = retriever.py
 
-### App Structure
+### Current Structure
 Chat_app/
 ├── for_ai/
 │   └── [python_file].txt
