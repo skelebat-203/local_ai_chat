@@ -27,6 +27,8 @@ Chat_app/
 - Allow creation of new subject
 
 ### Upcoming Features
+- Allow modification of a  subject
+- Allow deletion of a subject
 - Sources docs for specific subjects 
 - Sources links doc for specific subjects
 
@@ -50,16 +52,18 @@ Chat_app/
 │   └── [persona].md
 
 ### Current Features
-- Set subject
-
-### Upcoming Features
+- Set persona
 - Create a default person that I like
 - Allow users to chat without defining a persona
+- Allow users to create a persona
+
+### Upcoming Features
 - Allow modification of a persona
+- Allow deletion of a persona
 
 ## Python files
 ### main.py main_streaming.py
-This is UX thing. 
+This is UX thing. I'll clean it up when I do my 1st code clean. Get in there with the bleach and scouring pad.
 - main.py runs with no indication the chatbot is doing anything. Then, prints the response all at once.
 - main_streaming.py slowly prints the response, more human like.
 

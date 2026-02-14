@@ -14,6 +14,7 @@ Commands:
 • /chat_history - List all chats across subjects
 • /chat_history_[subject] - List chats for specific subject
 • /new_subject [subject_name]- Create a new subject by enteringhte command followed by the subject name
+• /new_persona [persona_name] - Create a new persona by enteringthe command followed by the persona name
 • /exit - Save and exit
 {"=" * 60}
 '''
@@ -104,6 +105,64 @@ def main():
                 if not all_chats:
                     print("No chat history found.")
                     continue
+            
+            elif user_input.lower().startswith("/chat_history_"):
+                subject_name = user_input[14:].strip()  # Extract subject after /chat_history_
+                if not subject_name:
+                    print("Please specify a subject: /chat_history_[subject]")
+                    continue
+                
+                chats = retriever.list_chats_by_subject(subject_name)
+                if not chats:
+                    print(f"No chat history found for subject '{subject_name}'.")
+                    continue
+                
+                print("\n" + "=" * 60)
+                print(f"Chat History for: {subject_name}")
+                print("=" * 60)
+                for idx, chat_info in enumerate(chats, 1):
+                    filename, file_path = chat_info
+                    print(f"{idx}. {filename}")
+                print("=" * 60)
+                
+                # Allow user to select a chat
+                try:
+                    selection = input("\nEnter number to open chat (or press Enter to cancel): ").strip()
+                    if selection:
+                        chat_idx = int(selection) - 1
+                        if 0 <= chat_idx < len(chats):
+                            filename, file_path = chats[chat_idx]
+                            
+                            # Load the chat
+                            loaded_history = retriever.load_chat_file(file_path)
+                            chat.load_history(loaded_history)
+                            
+                            # Load subject context
+                            system_prompt = retriever.build_system_prompt(retriever.default_persona, subject_name)
+                            chat.set_system_prompt(system_prompt)
+                            chat.set_subject_info(retriever.default_persona, subject_name)
+                            
+                            print(f"\n✓ Loaded chat from {filename}")
+                            print(f"✓ Subject: {subject_name}")
+                            print("✓ You can now continue this conversation")
+                            
+                            # Display the loaded chat history
+                            print("\n" + "=" * 60)
+                            print("Previous Chat:")
+                            print("=" * 60)
+                            for msg in loaded_history:
+                                role = msg['role'].capitalize()
+                                content = msg['content']
+                                print(f"\n{role}: {content}")
+                            print("\n" + "=" * 60)
+                            
+                            # Store original file path for deletion later
+                            chat.original_chat_file = file_path
+                        else:
+                            print("Invalid selection.")
+                except ValueError:
+                    print("Invalid input.")
+                continue
             
             elif user_input.lower().startswith("/new_subject"):
                 # Extract subject name
@@ -203,64 +262,115 @@ def main():
                     print("Invalid input.")
                 continue
             
-            elif user_input.lower().startswith("/chat_history_"):
-                subject_name = user_input[14:].strip()  # Extract subject after /chat_history_
-                if not subject_name:
-                    print("Please specify a subject: /chat_history_[subject]")
+            elif user_input.lower().startswith("/new_persona"):
+                # Extract persona name from command
+                parts = user_input.split(maxsplit=1)
+                if len(parts) < 2:
+                    print("Usage: /new_persona [persona_name]")
                     continue
                 
-                chats = retriever.list_chats_by_subject(subject_name)
-                if not chats:
-                    print(f"No chat history found for subject '{subject_name}'.")
+                persona_name = parts[1].strip()
+                
+                # Validate persona name (no spaces, alphanumeric + underscore)
+                if not persona_name.replace('_', '').replace('-', '').isalnum():
+                    print("✗ Error: Persona name must be alphanumeric (underscores and hyphens allowed)")
                     continue
                 
-                print("\n" + "=" * 60)
-                print(f"Chat History for: {subject_name}")
-                print("=" * 60)
-                for idx, chat_info in enumerate(chats, 1):
-                    filename, file_path = chat_info
-                    print(f"{idx}. {filename}")
-                print("=" * 60)
+                # Check if persona already exists
+                persona_file = retriever.personas_path / f"{persona_name.lower()}.md"
+                if persona_file.exists():
+                    print(f"✗ Error: Persona '{persona_name}' already exists")
+                    continue
                 
-                # Allow user to select a chat
+                # Create the persona file
                 try:
-                    selection = input("\nEnter number to open chat (or press Enter to cancel): ").strip()
-                    if selection:
-                        chat_idx = int(selection) - 1
-                        if 0 <= chat_idx < len(chats):
-                            filename, file_path = chats[chat_idx]
-                            
-                            # Load the chat
-                            loaded_history = retriever.load_chat_file(file_path)
-                            chat.load_history(loaded_history)
-                            
-                            # Load subject context
-                            system_prompt = retriever.build_system_prompt(retriever.default_persona, subject_name)
-                            chat.set_system_prompt(system_prompt)
-                            chat.set_subject_info(retriever.default_persona, subject_name)
-                            
-                            print(f"\n✓ Loaded chat from {filename}")
-                            print(f"✓ Subject: {subject_name}")
-                            print("✓ You can now continue this conversation")
-                            
-                            # Display the loaded chat history
-                            print("\n" + "=" * 60)
-                            print("Previous Chat:")
-                            print("=" * 60)
-                            for msg in loaded_history:
-                                role = msg['role'].capitalize()
-                                content = msg['content']
-                                print(f"\n{role}: {content}")
-                            print("\n" + "=" * 60)
-                            
-                            # Store original file path for deletion later
-                            chat.original_chat_file = file_path
-                        else:
-                            print("Invalid selection.")
-                except ValueError:
-                    print("Invalid input.")
+                    retriever.personas_path.mkdir(parents=True, exist_ok=True)
+                    print(f"{persona_name} created.")
+                    print("The next prompt will be saved as instructions for this persona.")
+                    
+                    # Wait for persona description
+                    persona_description = input("\n> ").strip()
+                    
+                    if not persona_description:
+                        print("✗ Error: Persona description cannot be empty")
+                        continue
+                    
+                    # Save the persona description
+                    with open(persona_file, 'w', encoding='utf-8') as f:
+                        f.write(persona_description)
+                    
+                    print(f"\nPersona description saved.")
+                    
+                    # Automatically load the new persona with current or default subject
+                    current_subject = chat.current_subject or retriever.default_subject
+                    system_prompt = retriever.build_system_prompt(persona_name, current_subject)
+                    chat.set_system_prompt(system_prompt)
+                    chat.set_subject_info(persona_name, current_subject)
+                    chat.clear_history()  # Start fresh with new persona
+                    
+                    print(f"✓ Loaded Persona: {persona_name}")
+                    print(f"What is your first prompt for {persona_name}?")
+                    
+                except Exception as e:
+                    print(f"✗ Error creating persona: {e}")
+                
                 continue
-            
+
+                # Extract persona name from command
+                parts = user_input.split(maxsplit=1)
+                if len(parts) < 2:
+                    print("Usage: /new_persona [persona_name]")
+                    continue
+                
+                persona_name = parts[1].strip()
+                
+                # Validate persona name (no spaces, alphanumeric + underscore)
+                if not persona_name.replace('_', '').replace('-', '').isalnum():
+                    print("✗ Error: Persona name must be alphanumeric (underscores and hyphens allowed)")
+                    continue
+                
+                # Check if persona already exists
+                persona_file = retriever.personas_path / f"{persona_name.lower()}.md"
+                if persona_file.exists():
+                    print(f"✗ Error: Persona '{persona_name}' already exists")
+                    continue
+                
+                # Create the persona file
+                try:
+                    retriever.personas_path.mkdir(parents=True, exist_ok=True)
+                    print(f"{persona_name} created.")
+                    print("The next prompt will be saved as instructions for this persona.")
+                    
+                    # Wait for persona description
+                    persona_description = input("\n> ").strip()
+                    
+                    if not persona_description:
+                        print("✗ Error: Persona description cannot be empty")
+                        # Delete the empty file if created
+                        if persona_file.exists():
+                            persona_file.unlink()
+                        continue
+                    
+                    # Save the persona description
+                    with open(persona_file, 'w', encoding='utf-8') as f:
+                        f.write(persona_description)
+                    
+                    print(f"\nPersona description saved. What is your first prompt for {persona_name}?")
+                    
+                    # Automatically load the new persona
+                    try:
+                        system_prompt = retriever.build_system_prompt(persona_name, retriever.default_subject)
+                        chat.set_system_prompt(system_prompt)
+                        chat.set_subject_info(persona_name, retriever.default_subject)
+                        print(f"✓ Persona '{persona_name}' loaded and ready")
+                    except Exception as e:
+                        print(f"⚠ Warning: Persona created but could not be loaded: {e}")
+                    
+                except Exception as e:
+                    print(f"✗ Error creating persona: {e}")
+                
+                continue
+
             # Check if user is setting persona/subject
             persona, subject, prompt = retriever.parse_subject_command(user_input)
             
