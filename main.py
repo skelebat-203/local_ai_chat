@@ -345,12 +345,31 @@ def main():
             if persona and subject:
                 # Load new subject
                 try:
-                    system_prompt = retriever.build_system_prompt(persona, subject)
+                    # Validate and get actual persona/subject names
+                    actual_persona = persona
+                    actual_subject = subject
+                    
+                    # Check if persona exists
+                    persona_file = retriever.personas_path / f"{persona.lower()}.md"
+                    if not persona_file.exists():
+                        print(f"⚠ Persona '{persona}' not found, using default")
+                        print(f"\t- You can use '/new_persona {persona}' to create a new persona")
+                        actual_persona = retriever.default_persona
+                    
+                    # Check if subject exists
+                    subject_folder = retriever.subjects_path / subject
+                    if not subject_folder.exists():
+                        print(f"⚠ Subject '{subject}' not found, using default")
+                        print(f"\t- You can use '/new_subject {subject}' to create a new subject")
+                        actual_subject = retriever.default_subject
+                    
+                    system_prompt = retriever.build_system_prompt(actual_persona, actual_subject)
                     chat.set_system_prompt(system_prompt)
-                    chat.set_subject_info(persona, subject)
+                    chat.set_subject_info(actual_persona, actual_subject)
                     chat.clear_history()
-                    print(f"✓ Loaded Persona: {persona}")
-                    print(f"✓ Loaded Subject: {subject}")
+                    print(f"✓ Loaded Persona: {actual_persona}")
+                    print(f"✓ Loaded Subject: {actual_subject}")
+
 
                     # If there's a prompt after the subject setting, process it
                     if prompt:
