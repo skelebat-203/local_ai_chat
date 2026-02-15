@@ -5,7 +5,7 @@ There are 3 reasons for this project.
 3. I want to brushup on other 
 
 ## Updates needed reach version 1 (.v01) milestone
-1. Refactor the folder structure
+1. Add "User:\n" and "Assistant:\n" to prompt / response
 2. Add the ability to see and update subject and persona instructions
 3. Add the ability to move chats to other subjects
 4. Add the ability to delete chats, subjects, and persona
@@ -98,7 +98,7 @@ Watch for when a python file is saved. When a file is saved. Copy the file in .t
 ### Planned App Structure
 I'm working on it...  I build a while. If I'm still interested in a few weeks, I fix the structure. I should have this cleaned up / refactored over the next week.
 
-local_ai_chat/
+local_chat_bot/
 ├── backend/
 │   ├── src/
 │   │   ├── __init__.py
@@ -205,7 +205,7 @@ When writing code the AI assistant's output should be in py format and when appl
 - retriever_[time-stamp].txt = retriever.py
 
 ### Current Structure
-Chat_app/
+local_chat_bot/
 ├── for_ai/
 │   └── [python_file].txt
 ├── personas/

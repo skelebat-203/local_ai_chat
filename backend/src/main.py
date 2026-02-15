@@ -1,7 +1,12 @@
-from retriever import SubjectRetriever
-from chat import ChatSession
-from logger import ChatLogger
 import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+
+from core.retriever import SubjectRetriever
+from core.chat import ChatSession
+from core.logger import ChatLogger
 
 commands = f'''
 {"=" * 60}
@@ -13,8 +18,8 @@ Commands:
 • /clear - Clear conversation history
 • /chat_history - List all chats across subjects
 • /chat_history_[subject] - List chats for specific subject
-• /new_subject [subject_name]- Create a new subject by enteringhte command followed by the subject name
-• /new_persona [persona_name] - Create a new persona by enteringthe command followed by the persona name
+• /new_subject [subject_name]- Create a new subject by entering the command followed by the subject name
+• /new_persona [persona_name] - Create a new persona by entering the command followed by the persona name
 • /pref_streaming - Toggle text streaming on/off
 • /exit - Save and exit
 {"=" * 60}
@@ -32,14 +37,17 @@ Note: You can chat immediately without setting persona/subject.
 '''
 
 def print_welcome():
-    # Print welcome message and instructions
     print(welcome)
 
 def main():
-    # Initialize components
-    retriever = SubjectRetriever(basepath=".")
+    # Get the base path (project root: backend/)
+    base_path = Path(__file__).parent.parent
+    data_path = base_path / "data"
+    
+    # Initialize components with new data path
+    retriever = SubjectRetriever(basepath=str(data_path))
     chat = ChatSession(model="llama3")
-    logger = ChatLogger(basepath=".")
+    logger = ChatLogger(basepath=str(data_path))
 
     # Initialize text streaming preference (default: on)
     text_streaming = True
@@ -63,14 +71,12 @@ def main():
 
             # Handle commands
             if user_input.lower() == "/exit":
-                # Save chat log if there's conversation history
                 if chat.current_subject and chat.conversation_history:
                     save = input(f"Save chat to '{chat.current_subject}'? (y/n): ").lower()
                     if save == 'y':
                         log_file = logger.save_chat(chat.current_subject, chat.conversation_history)
                         print(f"✓ Chat saved to {log_file}")
 
-                        # Delete original file if this was a resumed chat
                         if hasattr(chat, 'original_chat_file') and chat.original_chat_file.exists():
                             chat.original_chat_file.unlink()
                             print(f"✓ Removed old chat file: {chat.original_chat_file.name}")
@@ -82,7 +88,6 @@ def main():
                 continue
 
             elif user_input.lower() == "/pref_streaming":
-                # Toggle streaming preference
                 current_state = "on" if text_streaming else "off"
                 target_state = "off" if text_streaming else "on"
 
@@ -138,7 +143,6 @@ def main():
                     print(f"{idx}. [{subject}] {filename}")
                 print("=" * 60)
 
-                # Allow user to select a chat
                 try:
                     selection = input("\nEnter number to open chat (or press Enter to cancel): ").strip()
                     if selection:
@@ -146,11 +150,9 @@ def main():
                         if 0 <= chat_idx < len(all_chats):
                             subject, filename, file_path = all_chats[chat_idx]
 
-                            # Load the chat
                             loaded_history = retriever.load_chat_file(file_path)
                             chat.load_history(loaded_history)
 
-                            # Load subject context
                             system_prompt = retriever.build_system_prompt(retriever.default_persona, subject)
                             chat.set_system_prompt(system_prompt)
                             chat.set_subject_info(retriever.default_persona, subject)
@@ -159,7 +161,6 @@ def main():
                             print(f"✓ Subject: {subject}")
                             print("✓ You can now continue this conversation")
 
-                            # Display the loaded chat history
                             print("\n" + "=" * 60)
                             print("Previous Chat:")
                             print("=" * 60)
@@ -169,7 +170,6 @@ def main():
                                 print(f"\n{role}: {content}")
                             print("\n" + "=" * 60)
 
-                            # Store original file path for deletion later
                             chat.original_chat_file = file_path
                         else:
                             print("Invalid selection.")
@@ -178,7 +178,7 @@ def main():
                 continue
 
             elif user_input.lower().startswith("/chat_history_"):
-                subject_name = user_input[14:].strip()  # Extract subject after /chat_history_
+                subject_name = user_input[14:].strip()
                 if not subject_name:
                     print("Please specify a subject: /chat_history_[subject]")
                     continue
@@ -196,7 +196,6 @@ def main():
                     print(f"{idx}. {filename}")
                 print("=" * 60)
 
-                # Allow user to select a chat
                 try:
                     selection = input("\nEnter number to open chat (or press Enter to cancel): ").strip()
                     if selection:
@@ -204,11 +203,9 @@ def main():
                         if 0 <= chat_idx < len(chats):
                             filename, file_path = chats[chat_idx]
 
-                            # Load the chat
                             loaded_history = retriever.load_chat_file(file_path)
                             chat.load_history(loaded_history)
 
-                            # Load subject context
                             system_prompt = retriever.build_system_prompt(retriever.default_persona, subject_name)
                             chat.set_system_prompt(system_prompt)
                             chat.set_subject_info(retriever.default_persona, subject_name)
@@ -217,7 +214,6 @@ def main():
                             print(f"✓ Subject: {subject_name}")
                             print("✓ You can now continue this conversation")
 
-                            # Display the loaded chat history
                             print("\n" + "=" * 60)
                             print("Previous Chat:")
                             print("=" * 60)
@@ -227,7 +223,6 @@ def main():
                                 print(f"\n{role}: {content}")
                             print("\n" + "=" * 60)
 
-                            # Store original file path for deletion later
                             chat.original_chat_file = file_path
                         else:
                             print("Invalid selection.")
@@ -236,7 +231,6 @@ def main():
                 continue
 
             elif user_input.lower().startswith("/new_subject"):
-                # Extract subject name
                 parts = user_input.split(maxsplit=1)
                 if len(parts) < 2 or not parts[1].strip():
                     print("✗ Usage: /new_subject [subject_name]")
@@ -244,24 +238,20 @@ def main():
 
                 subject_name = parts[1].strip()
 
-                # Create subject folder
                 try:
                     subject_created = retriever.create_subject_folder(subject_name)
                     if subject_created:
                         print(f"✓ '{subject_name}' created.")
 
-                        # Ask about instructions
                         add_instructions = input("Do you want to add subject instructions? (y/n): ").lower().strip()
 
                         if add_instructions == 'y':
                             print("\nThe next prompt will be saved as instructions for this subject.")
                             print("Enter your instructions (press Enter when done):\n")
 
-                            # Get instructions from user
                             instructions = input("> ").strip()
 
                             if instructions:
-                                # Save instructions
                                 retriever.save_subject_instructions(subject_name, instructions)
                                 print(f"✓ Instructions saved.")
                             else:
@@ -271,7 +261,6 @@ def main():
                         else:
                             print(f"\nWhat is your first prompt for '{subject_name}'?")
 
-                        # Load the new subject
                         system_prompt = retriever.build_system_prompt(retriever.default_persona, subject_name)
                         chat.set_system_prompt(system_prompt)
                         chat.set_subject_info(retriever.default_persona, subject_name)
@@ -286,7 +275,6 @@ def main():
                 continue
 
             elif user_input.lower().startswith("/new_persona"):
-                # Extract persona name from command
                 parts = user_input.split(maxsplit=1)
                 if len(parts) < 2:
                     print("Usage: /new_persona [persona_name]")
@@ -294,42 +282,36 @@ def main():
 
                 persona_name = parts[1].strip()
 
-                # Validate persona name (no spaces, alphanumeric + underscore)
                 if not persona_name.replace('_', '').replace('-', '').isalnum():
                     print("✗ Error: Persona name must be alphanumeric (underscores and hyphens allowed)")
                     continue
 
-                # Check if persona already exists
                 persona_file = retriever.personas_path / f"{persona_name.lower()}.md"
                 if persona_file.exists():
                     print(f"✗ Error: Persona '{persona_name}' already exists")
                     continue
 
-                # Create the persona file
                 try:
                     retriever.personas_path.mkdir(parents=True, exist_ok=True)
                     print(f"{persona_name} created.")
                     print("The next prompt will be saved as instructions for this persona.")
 
-                    # Wait for persona description
                     persona_description = input("\n> ").strip()
 
                     if not persona_description:
                         print("✗ Error: Persona description cannot be empty")
                         continue
 
-                    # Save the persona description
                     with open(persona_file, 'w', encoding='utf-8') as f:
                         f.write(persona_description)
 
                     print(f"\nPersona description saved.")
 
-                    # Automatically load the new persona with current or default subject
                     current_subject = chat.current_subject or retriever.default_subject
                     system_prompt = retriever.build_system_prompt(persona_name, current_subject)
                     chat.set_system_prompt(system_prompt)
                     chat.set_subject_info(persona_name, current_subject)
-                    chat.clear_history()  # Start fresh with new persona
+                    chat.clear_history()
 
                     print(f"✓ Loaded Persona: {persona_name}")
                     print(f"What is your first prompt for {persona_name}?")
@@ -343,20 +325,16 @@ def main():
             persona, subject, prompt = retriever.parse_subject_command(user_input)
 
             if persona and subject:
-                # Load new subject
                 try:
-                    # Validate and get actual persona/subject names
                     actual_persona = persona
                     actual_subject = subject
                     
-                    # Check if persona exists
                     persona_file = retriever.personas_path / f"{persona.lower()}.md"
                     if not persona_file.exists():
                         print(f"⚠ Persona '{persona}' not found, using default")
                         print(f"\t- You can use '/new_persona {persona}' to create a new persona")
                         actual_persona = retriever.default_persona
                     
-                    # Check if subject exists
                     subject_folder = retriever.subjects_path / subject
                     if not subject_folder.exists():
                         print(f"⚠ Subject '{subject}' not found, using default")
@@ -370,8 +348,6 @@ def main():
                     print(f"✓ Loaded Persona: {actual_persona}")
                     print(f"✓ Loaded Subject: {actual_subject}")
 
-
-                    # If there's a prompt after the subject setting, process it
                     if prompt:
                         user_input = prompt
                     else:
@@ -380,16 +356,13 @@ def main():
                     print(f"✗ Error: {e}")
                     continue
 
-            # Send message with streaming or non-streaming based on preference
-            print()  # New line before response
+            print()
 
             if text_streaming:
-                # Stream response
                 for chunk in chat.send_message_stream(user_input):
                     print(chunk, end='', flush=True)
-                print()  # New line after streaming completes
+                print()
             else:
-                # Non-streaming response
                 response = chat.send_message(user_input)
                 print(response)
 

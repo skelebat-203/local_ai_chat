@@ -35,6 +35,19 @@ class PyFileHandler(FileSystemEventHandler):
         # if py_file.name == 'file_watcher.py':
         #     return
         
+        # Skip __init__.py files (they're usually empty or minimal)
+        if py_file.name == '__init__.py':
+            return
+        
+        # Skip test files
+        if py_file.name.startswith('test_'):
+            return
+        
+        # Skip empty or placeholder files (optional - check file size)
+        if py_file.stat().st_size < 50:  # Less than 50 bytes = likely empty
+            print(f"⊘ Skipping empty file: {py_file.name}")
+            return
+        
         # Delete any existing .txt files for this .py file (ignore timestamps)
         base_name = py_file.stem
         for existing_file in self.for_ai_dir.glob(f"{base_name}_*.txt"):
@@ -54,13 +67,17 @@ class PyFileHandler(FileSystemEventHandler):
         try:
             # Copy contents from .py to .txt
             shutil.copy2(py_file, txt_file)
-            print(f"✓ Created {txt_filename}")
+            print(f"✓ Created {txt_filename} (from {py_file.relative_to(self.project_dir)})")
         except Exception as e:
             print(f"✗ Error copying {py_file.name}: {e}")
 
 def main():
-    # Get project directory (current directory by default)
-    project_dir = os.getcwd()
+    # Get project root directory (two levels up from this script)
+    # file_watcher.py is at backend/src/utils/file_watcher.py
+    # So we need to go up 3 levels to reach project root
+    script_path = Path(__file__).resolve()
+    project_dir = script_path.parent.parent.parent.parent
+    
     print(f"Watching for .py file changes in: {project_dir}")
     print(f"Output directory: {project_dir}/for_ai")
     print("Press Ctrl+C to stop\n")
@@ -80,4 +97,4 @@ def main():
     observer.join()
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -2,7 +2,7 @@
 *.log
 logs/
 for_ai/
-subjects/*/chat_*.md
+backend/data/subjects/*/chat_*.md
 
 # Other common excludes
 __pycache__/

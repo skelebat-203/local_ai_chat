@@ -1,5 +1,6 @@
-from pathlib import Path
+import os
 from datetime import datetime
+from pathlib import Path
 
 class ChatLogger:
     def __init__(self, basepath="."):
