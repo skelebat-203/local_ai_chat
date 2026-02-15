@@ -1,0 +1,99 @@
+"""Central command handler and router."""
+
+from commands.chat_commands import (
+    handle_chat_history, handle_chat_history_by_subject,
+    handle_clear_history, handle_status, handle_streaming_toggle,
+    handle_exit
+)
+from commands.subject_commands import (
+    handle_list_personas, handle_list_subjects,
+    handle_new_subject, handle_new_persona,
+    handle_persona_subject_switch
+)
+from utils.ui import print_commands
+
+
+class CommandHandler:
+    """Handles routing and execution of user commands."""
+
+    def __init__(self, retriever, chat, logger):
+        self.retriever = retriever
+        self.chat = chat
+        self.logger = logger
+        self.text_streaming = True
+
+    def handle_command(self, user_input):
+        """
+        Route and handle user commands.
+        
+        Returns:
+            tuple: (should_exit, modified_input)
+            - should_exit: True if user wants to exit
+            - modified_input: Modified input (e.g., extracted prompt after persona/subject switch)
+        """
+        cmd = user_input.lower()
+
+        # Exit command
+        if cmd == "/exit":
+            return handle_exit(self.chat, self.logger), None
+
+        # Help command
+        if cmd == "/help":
+            print_commands()
+            return False, None
+
+        # Streaming toggle
+        if cmd == "/pref_streaming":
+            self.text_streaming = handle_streaming_toggle(self.text_streaming)
+            return False, None
+
+        # List commands
+        if cmd == "/personas":
+            handle_list_personas(self.retriever)
+            return False, None
+
+        if cmd == "/subjects":
+            handle_list_subjects(self.retriever)
+            return False, None
+
+        # Status command
+        if cmd == "/status":
+            handle_status(self.chat, self.text_streaming)
+            return False, None
+
+        # Clear history
+        if cmd == "/clear":
+            handle_clear_history(self.chat)
+            return False, None
+
+        # Chat history commands
+        if cmd == "/chat_history":
+            handle_chat_history(self.retriever, self.chat)
+            return False, None
+
+        if cmd.startswith("/chat_history_"):
+            subject_name = user_input[14:].strip()
+            handle_chat_history_by_subject(self.retriever, self.chat, subject_name)
+            return False, None
+
+        # New subject command
+        if cmd.startswith("/new_subject"):
+            parts = user_input.split(maxsplit=1)
+            subject_name = parts[1].strip() if len(parts) > 1 else ""
+            handle_new_subject(self.retriever, self.chat, subject_name)
+            return False, None
+
+        # New persona command
+        if cmd.startswith("/new_persona"):
+            parts = user_input.split(maxsplit=1)
+            persona_name = parts[1].strip() if len(parts) > 1 else ""
+            handle_new_persona(self.retriever, self.chat, persona_name)
+            return False, None
+
+        # Check for persona/subject switch
+        prompt = handle_persona_subject_switch(self.retriever, self.chat, user_input)
+        if prompt is not None:
+            return False, prompt if prompt else None
+
+        # Not a command, return original input
+        return False, user_input

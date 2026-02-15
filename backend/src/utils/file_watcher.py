@@ -8,9 +8,9 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 class PyFileHandler(FileSystemEventHandler):
-    def __init__(self, project_dir):
+    def __init__(self, project_dir, for_ai_dir):
         self.project_dir = Path(project_dir)
-        self.for_ai_dir = self.project_dir / "for_ai"
+        self.for_ai_dir = Path(for_ai_dir)
         # Create for_ai directory if it doesn't exist
         self.for_ai_dir.mkdir(exist_ok=True)
     
@@ -24,6 +24,19 @@ class PyFileHandler(FileSystemEventHandler):
         if not event.is_directory and event.src_path.endswith('.py'):
             self.copy_to_txt(event.src_path)
     
+    def get_txt_filename(self, py_file):
+        """Generate appropriate txt filename based on whether it's __init__.py or not"""
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M')
+        
+        if py_file.name == '__init__.py':
+            # Get parent folder name
+            parent = py_file.parent.name
+            base_name = f"{parent}.init"
+            return f"{base_name}_{timestamp}.txt"
+        else:
+            # Regular Python files
+            return f"{py_file.stem}_{timestamp}.txt"
+    
     def copy_to_txt(self, py_file_path):
         py_file = Path(py_file_path)
         
@@ -35,54 +48,54 @@ class PyFileHandler(FileSystemEventHandler):
         # if py_file.name == 'file_watcher.py':
         #     return
         
-        # Skip __init__.py files (they're usually empty or minimal)
+        # Determine the base name for matching old files
         if py_file.name == '__init__.py':
-            return
-        
-        # Skip test files
-        if py_file.name.startswith('test_'):
-            return
-        
-        # Skip empty or placeholder files (optional - check file size)
-        if py_file.stat().st_size < 50:  # Less than 50 bytes = likely empty
-            print(f"⊘ Skipping empty file: {py_file.name}")
-            return
+            parent = py_file.parent.name
+            base_pattern = f"{parent}.init_*.txt"
+        else:
+            base_pattern = f"{py_file.stem}_*.txt"
         
         # Delete any existing .txt files for this .py file (ignore timestamps)
-        base_name = py_file.stem
-        for existing_file in self.for_ai_dir.glob(f"{base_name}_*.txt"):
+        for existing_file in self.for_ai_dir.glob(base_pattern):
             try:
                 existing_file.unlink()
                 print(f"✗ Deleted old version: {existing_file.name}")
             except Exception as e:
                 print(f"✗ Error deleting {existing_file.name}: {e}")
         
-        # Create timestamp in yyyy-mm-dd-hh-mm format
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M')
-        
-        # Create corresponding .txt filename with timestamp
-        txt_filename = f"{base_name}_{timestamp}.txt"
+        # Generate new filename
+        txt_filename = self.get_txt_filename(py_file)
         txt_file = self.for_ai_dir / txt_filename
         
         try:
             # Copy contents from .py to .txt
             shutil.copy2(py_file, txt_file)
-            print(f"✓ Created {txt_filename} (from {py_file.relative_to(self.project_dir)})")
+            print(f"✓ Created {txt_filename}")
         except Exception as e:
             print(f"✗ Error copying {py_file.name}: {e}")
 
 def main():
-    # Get project root directory (two levels up from this script)
-    # file_watcher.py is at backend/src/utils/file_watcher.py
-    # So we need to go up 3 levels to reach project root
-    script_path = Path(__file__).resolve()
-    project_dir = script_path.parent.parent.parent.parent
+    # Find project root (backend directory)
+    # Start from current file location and go up to find 'backend'
+    current_file = Path(__file__).resolve()
+    project_dir = current_file.parent
+    
+    # Navigate up until we find the backend directory
+    while project_dir.name != 'backend' and project_dir.parent != project_dir:
+        project_dir = project_dir.parent
+    
+    # If we didn't find 'backend', use current working directory
+    if project_dir.name != 'backend':
+        project_dir = Path.cwd()
+    
+    # Set for_ai directory at backend/src/utils/for_ai/
+    for_ai_dir = project_dir / "src" / "utils" / "for_ai"
     
     print(f"Watching for .py file changes in: {project_dir}")
-    print(f"Output directory: {project_dir}/for_ai")
+    print(f"Output directory: {for_ai_dir}")
     print("Press Ctrl+C to stop\n")
     
-    event_handler = PyFileHandler(project_dir)
+    event_handler = PyFileHandler(project_dir, for_ai_dir)
     observer = Observer()
     observer.schedule(event_handler, project_dir, recursive=True)
     observer.start()

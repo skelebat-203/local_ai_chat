@@ -1,11 +1,22 @@
 # Log files
 *.log
 logs/
-for_ai/
 backend/data/subjects/*/chat_*.md
 
 # Other common excludes
 __pycache__/
+*.pyc
+*.pyo
 
-#Test files
-temp_test.py
+# For AI directory (file watcher outputs)
+backend/src/utils/for_ai/
+
+# Tests directory
+backend/tests/
+
+# Environment and IDE
+.env
+.venv/
+venv/
+*.idea/
+.vscode/
