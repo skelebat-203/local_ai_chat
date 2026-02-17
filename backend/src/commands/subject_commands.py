@@ -192,37 +192,69 @@ def handle_new_persona(retriever, chat, persona_name):
 
 
 def handle_persona_subject_switch(retriever, chat, user_input):
-    """Handle persona/subject switching via 'Persona: X, Subject: Y, prompt' format."""
-    persona, subject, prompt = retriever.parse_subject_command(user_input)
+    """
+    Handle persona/subject switching via flexible formats, for example:
+      - "Persona: X"
+      - "Subject: Y"
+      - "Persona: X, Subject: Y"
+      - "Persona: X, Subject: Y, prompt"
+      - "Subject: Y, Persona: X, prompt"
 
-    if not (persona and subject):
+    Returns:
+        None      -> if no persona/subject keywords found (treat as normal input)
+        ""        -> if it was a meta-only line (switch only, no prompt to send)
+        <prompt>  -> if there is remaining prompt text after switching
+    """
+    persona, subject, prompt, is_meta_only = retriever.parse_subject_command(user_input)
+
+    # If neither persona nor subject was found, this is not a switch command
+    if persona is None and subject is None:
         return None
 
     try:
-        actual_persona = persona
-        actual_subject = subject
+        # Determine the target persona and subject, falling back to current/default
+        current_persona = chat.current_persona or retriever.default_persona
+        current_subject = chat.current_subject or retriever.default_subject
 
-        persona_file = retriever.personas_path / f"{persona.lower()}.md"
+        target_persona = persona if persona is not None else current_persona
+        target_subject = subject if subject is not None else current_subject
+
+        # Validate persona file (if not default/found, fall back with warning)
+        actual_persona = target_persona
+        persona_file = retriever.personas_path / f"{target_persona.lower()}.md"
         if not persona_file.exists():
-            print_warning(f"Persona '{persona}' not found, using default")
-            print(f"\t- You can use '/new_persona {persona}' to create a new persona")
+            print_warning(f"Persona '{target_persona}' not found, using default")
+            print(f"\t- You can use '/new_persona {target_persona}' to create a new persona")
             actual_persona = retriever.default_persona
 
-        subject_folder = retriever.subjects_path / subject
+        # Validate subject folder (if not found, fall back with warning)
+        actual_subject = target_subject
+        subject_folder = retriever.subjects_path / target_subject
         if not subject_folder.exists():
-            print_warning(f"Subject '{subject}' not found, using default")
-            print(f"\t- You can use '/new_subject {subject}' to create a new subject")
+            print_warning(f"Subject '{target_subject}' not found, using default")
+            print(f"\t- You can use '/new_subject {target_subject}' to create a new subject")
             actual_subject = retriever.default_subject
 
+        # Build new system prompt and update chat session
         system_prompt = retriever.build_system_prompt(actual_persona, actual_subject)
         chat.set_system_prompt(system_prompt)
         chat.set_subject_info(actual_persona, actual_subject)
         chat.clear_history()
+
         print_success(f"Loaded Persona: {actual_persona}")
         print_success(f"Loaded Subject: {actual_subject}")
 
-        return prompt if prompt else ""
+        # Item 3: meta vs "switch + prompt"
+        if is_meta_only:
+            # Just switch persona/subject; no prompt to send
+            return ""
+        else:
+            # Switch and then treat remaining text as the user's prompt
+            return prompt if prompt else ""
 
     except FileNotFoundError as e:
         print_error(f"Error: {e}")
+        return None
+    except Exception as e:
+        print_error(f"Unexpected error: {e}")
         return None

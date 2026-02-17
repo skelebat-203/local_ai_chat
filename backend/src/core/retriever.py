@@ -142,27 +142,66 @@ class SubjectRetriever:
         return system_prompt
 
     def parse_subject_command(self, user_input):
-        """Parse commands like 'Persona: writer, Subject: Fantasy story, prompt'
-        Returns (persona, subject, remaining_prompt)"""
-        if "persona" in user_input.lower() and "subject" in user_input.lower():
-            persona = None
-            subject = None
-            prompt_parts = []
+        """
+        Parse commands like:
+          - "Persona: writer"
+          - "Subject: Fantasy story"
+          - "Persona: writer, Subject: Fantasy story"
+          - "Persona: writer, Subject: Fantasy story, prompt"
+          - "Subject: Fantasy story, Persona: writer, prompt"
 
-            parts = user_input.split(',')
-            for i, part in enumerate(parts):
-                part_lower = part.strip().lower()
-                if part_lower.startswith("persona"):
-                    persona = part.split(':', 1)[1].strip()
-                elif part_lower.startswith("subject"):
-                    subject = part.split(':', 1)[1].strip()
-                else:
-                    prompt_parts.append(part.strip())
+        Returns:
+            (persona, subject, prompt, is_meta_only)
 
-            prompt = ', '.join(prompt_parts).strip()
-            return persona, subject, prompt
+        persona: extracted persona name or None
+        subject: extracted subject name or None
+        prompt:  remaining text after persona/subject declarations (may be "")
+        is_meta_only: True if line only contains persona/subject declarations
+                      (no extra prompt text)
+        """
+        text = user_input.strip()
+        lower_text = text.lower()
 
-        return None, None, user_input
+        # Quick check: if neither keyword is present, treat as normal prompt
+        if "persona" not in lower_text and "subject" not in lower_text:
+            return None, None, text, False
+
+        persona = None
+        subject = None
+        prompt_parts = []
+
+        # Split by comma to support:
+        # "Persona: X, Subject: Y, rest of prompt"
+        parts = text.split(',')
+
+        for part in parts:
+            raw = part.strip()
+            lower = raw.lower()
+
+            if lower.startswith("persona"):
+                # Everything after the first ':' is the persona name
+                if ':' in raw:
+                    persona_value = raw.split(':', 1)[1].strip()
+                    if persona_value:
+                        persona = persona_value
+            elif lower.startswith("subject"):
+                # Everything after the first ':' is the subject name
+                if ':' in raw:
+                    subject_value = raw.split(':', 1)[1].strip()
+                    if subject_value:
+                        subject = subject_value
+            else:
+                # Any segment that is not a persona/subject declaration is part of the prompt
+                if raw:
+                    prompt_parts.append(raw)
+
+        prompt = ', '.join(prompt_parts).strip()
+
+        # Meta‑only if we found at least a persona or subject
+        # and there is no extra prompt text
+        is_meta_only = (persona is not None or subject is not None) and (prompt == "")
+
+        return persona, subject, prompt, is_meta_only
 
     def list_personas(self):
         """List all available personas"""
