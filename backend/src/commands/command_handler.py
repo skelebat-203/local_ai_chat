@@ -8,7 +8,8 @@ from commands.chat_commands import (
 from commands.subject_commands import (
     handle_list_personas, handle_list_subjects,
     handle_new_subject, handle_new_persona,
-    handle_persona_subject_switch
+    handle_persona_subject_switch, handle_view_subject,
+    handle_view_persona
 )
 from utils.ui import print_commands
 
@@ -25,7 +26,7 @@ class CommandHandler:
     def handle_command(self, user_input):
         """
         Route and handle user commands.
-        
+
         Returns:
             tuple: (should_exit, modified_input)
             - should_exit: True if user wants to exit
@@ -54,6 +55,15 @@ class CommandHandler:
 
         if cmd == "/subjects":
             handle_list_subjects(self.retriever)
+            return False, None
+
+        # View and update commands
+        if cmd == "/view_subject":
+            handle_view_subject(self.retriever, self.chat)
+            return False, None
+
+        if cmd == "/view_persona":
+            handle_view_persona(self.retriever, self.chat)
             return False, None
 
         # Status command

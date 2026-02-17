@@ -18,6 +18,91 @@ def handle_list_subjects(retriever):
     print(f"Available subjects: {', '.join(subjects)}")
 
 
+def handle_view_subject(retriever, chat):
+    """Handle /view_subject command - view and optionally update subject instructions."""
+    current_subject = chat.current_subject or retriever.default_subject
+
+    print(f"\n=== Subject: {current_subject} ===\n")
+
+    try:
+        # Load current instructions
+        instructions = retriever.load_subject_instructions(current_subject)
+        print("Current Instructions:")
+        print("-" * 50)
+        print(instructions)
+        print("-" * 50)
+
+        # Ask if user wants to update
+        if get_confirmation("\nDo you want to update these instructions?"):
+            print("\nEnter new instructions (press Enter when done):\n")
+            new_instructions = get_user_input("> ")
+
+            if new_instructions:
+                success = retriever.update_subject_instructions(current_subject, new_instructions)
+                if success:
+                    print_success("Subject instructions updated successfully.")
+
+                    # Rebuild system prompt with new instructions
+                    current_persona = chat.current_persona or retriever.default_persona
+                    system_prompt = retriever.build_system_prompt(current_persona, current_subject)
+                    chat.set_system_prompt(system_prompt)
+                    print_success("System prompt updated with new instructions.")
+                else:
+                    print_error("Failed to update subject instructions.")
+            else:
+                print_warning("No instructions provided. Update cancelled.")
+
+    except FileNotFoundError as e:
+        print_error(f"Error: {e}")
+    except Exception as e:
+        print_error(f"Unexpected error: {e}")
+
+
+def handle_view_persona(retriever, chat):
+    """Handle /view_persona command - view and optionally update persona instructions."""
+    current_persona = chat.current_persona or retriever.default_persona
+    is_default = current_persona.lower() == retriever.default_persona.lower()
+
+    print(f"\n=== Persona: {current_persona} ===\n")
+
+    try:
+        # Load current persona instructions
+        persona_instructions = retriever.load_persona(current_persona)
+        print("Current Instructions:")
+        print("-" * 50)
+        print(persona_instructions)
+        print("-" * 50)
+
+        # Only allow editing if not default persona
+        if is_default:
+            print("\n⚠ Default persona cannot be updated.")
+        else:
+            # Ask if user wants to update
+            if get_confirmation("\nDo you want to update these instructions?"):
+                print("\nEnter new instructions (press Enter when done):\n")
+                new_instructions = get_user_input("> ")
+
+                if new_instructions:
+                    success = retriever.update_persona_instructions(current_persona, new_instructions)
+                    if success:
+                        print_success("Persona instructions updated successfully.")
+
+                        # Rebuild system prompt with new instructions
+                        current_subject = chat.current_subject or retriever.default_subject
+                        system_prompt = retriever.build_system_prompt(current_persona, current_subject)
+                        chat.set_system_prompt(system_prompt)
+                        print_success("System prompt updated with new instructions.")
+                    else:
+                        print_error("Failed to update persona instructions.")
+                else:
+                    print_warning("No instructions provided. Update cancelled.")
+
+    except FileNotFoundError as e:
+        print_error(f"Error: {e}")
+    except Exception as e:
+        print_error(f"Unexpected error: {e}")
+
+
 def handle_new_subject(retriever, chat, subject_name):
     """Handle /new_subject command."""
     if not subject_name:

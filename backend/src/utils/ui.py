@@ -18,8 +18,8 @@ Commands:
 • /pref_streaming - Toggle text streaming on/off
 • Keyboard Navigation 
    • UP, DOWN, LEFT, and Right arrow keys - navigate throught the prompt
-   • ALT + ENTER - Save and exit
-   • ESC + ENTER - Save and exit
+   • ALT + ENTER - Submit a prompt or Save and exit
+   • ESC + ENTER - Submit a prompt or Save and exit
 {"=" * 60}
 '''
 
@@ -31,7 +31,7 @@ Format:
 Persona: <name>, Subject: <name>, <prompt>
 \t- Load persona and subject, then send prompt
 Note: You can chat immediately without setting persona/subject.
-• ALT + ENTER - Save and exit
+• ALT + ENTER - Submit a prompt or Save and exit
 • /help - List all commands
 '''
 

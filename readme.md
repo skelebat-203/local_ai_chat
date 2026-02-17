@@ -4,6 +4,19 @@ There are 3 reasons for this project.
 2. I want to learn some skills
 3. I want to brushup on other 
 
+## To run
+1. In terminal navigate to local_chat_bot/backend/src
+2. run `python3 main.py`
+
+## Features
+### Current Features
+- Default subject / persona
+- Set alternate subject / persona
+- Store subject related chat in subject log
+- Retrieve subject instructions and chat logs
+- View chats, all chat or subject specific
+- Allow creation of new subject / persona
+
 ## Updates needed reach version 1 (.v01) milestone
 1. Add the ability to see and update subject and persona instructions
 2. Add the ability to move chats to other subjects
@@ -18,86 +31,35 @@ There are 3 reasons for this project.
    - "/chat_history" Format: [number] [title] [subject] [hh:mm] [yyyy-mm-dd]
    - "/chat_history [subject]" Format: [title] [hh:mm] [yyyy-mm-dd]
    - still want to select a chat by the displayed list item number
-7. Milestone 1 complete
-   - Milestone 2 will be an app UI. So, Users aren't workin gin terminal.
+7. Version 1 complete
 
-## Chat Logs
-Sort historic chats are sorted by subject.
-
-## Subjects
-Holds a number of subject folders: my_novel, coding_project_01, etc.  In each subject folder is a sources_docs folder, links.txt, an instructions.md file, and chat logs related to that subject.
-
-### Structure
-Chat_app/
-├── subjects/
-│   └── [subject_folder]/
-│       ├── instructions.md
-│       └── chat_[time_stamp].md
-
-### Current Features
-- Set subject
-- Store subject related chat in subject log
-- Retrieve subject instructions and chat logs
-- Create undefined subject folder and instructions
-- Allow users to chat without defining a subject
-- View chats, all and within a specific subject
-- Allow creation of new subject
-
-### Upcoming Features
-- Allow modification of a  subject
-- Allow deletion of a subject
+### Version 2: App UI and sources
+- Add UI
 - Sources docs for specific subjects 
 - Sources links doc for specific subjects
 
-#### Future structure update
-Chat_app/
-├── subjects/
-│   └── [subject_folder]/
-│       ├──[sources_folder]/
-│           ├── instructions.md
-│           ├── links.md
-│           ├── [source_doc]
-│           └── [source_doc]
-│       └── chat_[time_stamp].md
+## Sucture
+- data/
+- src/
+- .gitignore - everthing git should ignore when doing its thing.
+- readme.md - you're currently reading this.
+- requirements.txt - all the stuff required to run this app.
 
-## Personas
-Holds the different types of personalities the user can choose from.
+### data
+- personas
+- subjects
+- chatlogs
 
-### Structure
-Chat_app/
-├── personas/
-│   └── [persona].md
+### src
+- commands/ - chat, central, and subject/persona management command handlers.
+- core/ - logic for chat, logging chat, and retrieving chat, subject, persona
+- utils/ - terminal UI and stuff for my AI assistant workaround
+- main.py - central contol for app
 
-### Current Features
-- Set persona
-- Create a default person that I like
-- Allow users to chat without defining a persona
-- Allow users to create a persona
+## file_watcher.py
+The chat service I am using to help with the project cannot store / "see" .py files to use a sources. This script exists as a workaround for that bug. It watches for when a python file is saved. When a file is saved. It copies the file in .txt format with a timestamp. And deletes the old .txt version if one exists. 
 
-### Upcoming Features
-- Allow modification of a persona
-- Allow deletion of a persona
-
-## Python files
-### main.py
-Manages the app.
-
-### chat.py
-Chat logic: sending messages, receiving responses, managing conversation flow
-chat.txt is a copy of chat.py meant to do used as a source doc by an AI assistant.
-
-### logger.py
-This is curently how I am saving and sorting the current chat once I type /exit
-
-### retriever.py
-This currently grabs the persona and context when the user requests it.
-
-### file_watcher.py
-Watch for when a python file is saved. When a file is saved. Copy the file in .txt format with a timestamp. Delete old .txt version if one exists. The chat service I am using to help with the project cannot store / "see" .py files. This script exists as a workaround for that bug. 
-
-### Planned App Structure
-I'm working on it...  I build a while. If I'm still interested in a few weeks, I fix the structure. I should have this cleaned up / refactored over the next week.
-
+### Full App Structure
 local_chat_bot/
 ├── backend/
 │   ├── src/
@@ -198,25 +160,15 @@ A text version of all program files has been uploaded as source documents (examp
 
 When writing code the AI assistant's output should be in py format and when applicable in a py file.
 ### Current copies
-- main_[time-stamp].txt = main.py
-- main_streaming_[time-stamp].txt = main_streaming.py
 - chat_[time-stamp].txt = chat.py
+- chat_commands_[time-stamp].txt = chat_commands.py
+- commands_handler_[time-stamp].txt = commands_handler.py
+- commands.init_[time-stamp].txt = commands/ \__init\__.py
+- core.init_[time-stamp].txt = core/ \__init\__.py
+- file_watcher_[time-stamp].txt = file_watcher.py
 - logger_[time-stamp].txt = logger.py
+- main_[time-stamp].txt = main.py
 - retriever_[time-stamp].txt = retriever.py
-
-### Current Structure
-local_chat_bot/
-├── for_ai/
-│   └── [python_file].txt
-├── personas/
-│   └── [persona].md
-├── subjects/
-│   └── [subject_folder]/
-│       ├── instructions.md
-│       └── chat_[timestamp].md
-├── chat.py
-├── file_watcher.py
-├── logger.py
-├── main_streaming.py
-├── main.py
-└── retriever.py
+- subject_commands_[time-stamp].txt = subject_commands.py
+- ui_[time-stamp].txt = ui.py
+- utils.init_[time-stamp].txt = utils/ \__init\__.py
