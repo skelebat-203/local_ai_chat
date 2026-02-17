@@ -1,5 +1,8 @@
 """UI utilities for terminal interface."""
 
+from prompt_toolkit import prompt
+from prompt_toolkit.key_binding import KeyBindings
+
 COMMANDS_TEXT = f'''
 {"=" * 60}
 Commands:
@@ -13,7 +16,10 @@ Commands:
 • /new_subject [subject_name]- Create a new subject by entering the command followed by the subject name
 • /new_persona [persona_name] - Create a new persona by entering the command followed by the persona name
 • /pref_streaming - Toggle text streaming on/off
-• /exit - Save and exit
+• Keyboard Navigation 
+   • UP, DOWN, LEFT, and Right arrow keys - navigate throught the prompt
+   • ALT + ENTER - Save and exit
+   • ESC + ENTER - Save and exit
 {"=" * 60}
 '''
 
@@ -25,8 +31,8 @@ Format:
 Persona: <name>, Subject: <name>, <prompt>
 \t- Load persona and subject, then send prompt
 Note: You can chat immediately without setting persona/subject.
+• ALT + ENTER - Save and exit
 • /help - List all commands
-• /exit - Save and exit
 '''
 
 
@@ -61,11 +67,16 @@ def print_warning(message):
     """Print warning message."""
     print(f"⚠ {message}")
 
-
-def get_user_input(prompt="\n> "):
-    """Get user input with default prompt."""
-    return input(prompt).strip()
-
+def get_user_input(prompt_text="\n> "):
+    """Get user input with arrow key navigation support."""
+    print("(Press Alt+Enter to submit)")
+    try:
+        user_input = prompt(prompt_text, multiline=True)
+        return user_input.strip()
+    except KeyboardInterrupt:
+        return ""
+    except EOFError:
+        return "exit"
 
 def get_confirmation(message):
     """Get yes/no confirmation from user."""

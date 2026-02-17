@@ -5,10 +5,10 @@ There are 3 reasons for this project.
 3. I want to brushup on other 
 
 ## Updates needed reach version 1 (.v01) milestone
-1. Add "User:\n" and "Assistant:\n" to prompt / response
-2. Add the ability to see and update subject and persona instructions
-3. Add the ability to move chats to other subjects
-4. Add the ability to delete chats, subjects, and persona
+1. Add the ability to see and update subject and persona instructions
+2. Add the ability to move chats to other subjects
+3. Add the ability to delete chats, subjects, and persona
+4. Add "User:\n" and "Assistant:\n" to prompt / response
 5. Add chat title
    - On save Title = 1st 10 words of chat.
    - add command "/update_title"
