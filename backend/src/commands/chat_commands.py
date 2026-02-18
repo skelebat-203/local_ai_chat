@@ -3,8 +3,7 @@
 from pathlib import Path
 from utils.ui import (
     print_section_header, print_success, print_error,
-    get_user_input, get_confirmation, display_chat_history
-)
+    get_user_input, get_confirmation, display_chat_history)
 
 
 def handle_chat_history(retriever, chat):
@@ -190,3 +189,87 @@ def handle_delete_chat(retriever, chat, arg: str | None) -> bool:
     else:
         print_error("Failed to delete chat.")
     return success
+
+def handle_chat_move(retriever, chat, arg: str | None) -> bool:
+    """
+    Handle /c_move command.
+
+    Flow:
+    1. Show numbered list of all chats: [subject] [chat_title]
+    2. Prompt: "Enter the number of the chat to move or 'n' to exit: "
+    3. On valid selection, show subjects list and prompt:
+       "Enter the number of the subject to move to or 'n' to exit: "
+    4. Perform move and inform user.
+    """
+    # 1. Get all chats
+    all_chats = retriever.list_all_chats()
+    if not all_chats:
+        printwarning("No chats found.")
+        return False
+
+    print_section_header("Move Chat to Another Subject")
+
+    # Display numbered list: [subject] [chat_title]
+    # list_all_chats returns (subject, filename, filepath)
+    for idx, (subject, filename, _path) in enumerate(all_chats, start=1):
+        # For now, treat filename as the "title" (you can later swap in a parsed title)
+        print(f"{idx}. [{subject}] {filename}")
+
+    # 2. Ask which chat to move
+    while True:
+        choice_str = get_user_input("Enter the number of the chat to move or 'n' to exit: ")
+        if choice_str.lower() == "n":
+            # Exit and allow normal prompting
+            return False
+
+        try:
+            choice = int(choice_str)
+        except ValueError:
+            printerror("Invalid number.")
+            continue
+
+        if choice < 1 or choice > len(all_chats):
+            printerror("Invalid number.")
+            continue
+
+        # Valid chat selected
+        source_subject, chat_filename, chat_path = all_chats[choice - 1]
+        break
+
+    # 3. Show available subjects
+    subjects = retriever.list_subjects()
+    if not subjects:
+        printwarning("No subjects available to move into.")
+        return False
+
+    print_section_header("Available Subjects")
+    for idx, subject in enumerate(subjects, start=1):
+        print(f"{idx}. {subject}")
+
+    # Ask which subject to move into
+    while True:
+        subject_choice_str = get_user_input("Enter the number of the subject to move to or 'n' to exit: ")
+        if subject_choice_str.lower() == "n":
+            return False
+
+        try:
+            subject_choice = int(subject_choice_str)
+        except ValueError:
+            printerror("Invalid number.")
+            continue
+
+        if subject_choice < 1 or subject_choice > len(subjects):
+            printerror("Invalid number.")
+            continue
+
+        target_subject = subjects[subject_choice - 1]
+        break
+
+    # 4. Perform the move
+    success = retriever.move_chat_to_subject(source_subject, chat_filename, target_subject)
+    if success:
+        printsuccess(f"{chat_filename} moved to {target_subject}")
+        return True
+    else:
+        printerror("Failed to move chat.")
+        return False

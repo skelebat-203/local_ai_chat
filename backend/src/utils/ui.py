@@ -15,8 +15,8 @@ Keyboard Navigation
 • ALT + ENTER - Submit a prompt or Save and exit
 • ESC + ENTER - Submit a prompt or Save and exit
 Create new
-• /new_subject [subject_name]- Create a new subject by entering the command followed by the subject name
-• /new_persona [persona_name] - Create a new persona by entering the command followed by the persona name
+• /s_new [subject_name]- Create a new subject by entering the command followed by the subject name
+• /p_new [persona_name] - Create a new persona by entering the command followed by the persona name
 View / Update
 • /help - List all commands
 • /personas - List available personas
@@ -26,9 +26,9 @@ View / Update
 • /s_instru - view and optionally update subject instructions
 • /p_instru - view and optionally update persona instructions
 Delete
-• /delete_persona [persona_name] - Delete [persona]
-• /delete_subject [subject_name] - Delete [subject]
-• /delete_chat [chat_name] - Delete [chat]
+• /p_delete [persona_name] - Delete [persona]
+• /s_delete [subject_name] - Delete [subject]
+• /c_delete [chat_name] - Delete [chat]
 {"=" * 60}
 '''
 

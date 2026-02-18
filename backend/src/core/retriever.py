@@ -397,3 +397,37 @@ class SubjectRetriever:
         except Exception as e:
             print(f"Error deleting chat file: {e}")
             return False
+
+    def move_chat_to_subject(self, source_subject: str, chat_filename: str, target_subject: str) -> bool:
+        """
+        Move a chat file from one subject folder to another.
+
+        Returns:
+            True if successful, False otherwise.
+        """
+        source_folder = self.subjects_path / source_subject
+        target_folder = self.subjects_path / target_subject
+
+        # Ensure source exists
+        source_path = source_folder / chat_filename
+        if not source_path.exists():
+            print(f"Chat {chat_filename} not found in subject {source_subject}.")
+            return False
+
+        # Ensure target folder exists
+        try:
+            target_folder.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(f"Error creating target subject folder {target_subject}: {e}")
+            return False
+
+        target_path = target_folder / chat_filename
+
+        try:
+            # Copy then delete (safer than rename across filesystems)
+            target_path.write_text(source_path.read_text(encoding="utf-8"), encoding="utf-8")
+            source_path.unlink()
+            return True
+        except Exception as e:
+            print(f"Error moving chat from {source_subject} to {target_subject}: {e}")
+            return False

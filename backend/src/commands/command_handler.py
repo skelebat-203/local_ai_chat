@@ -3,7 +3,7 @@
 from commands.chat_commands import (
     handle_chat_history, handle_chat_history_by_subject,
     handle_clear_history, handle_status, handle_streaming_toggle,
-    handle_exit, handle_delete_chat
+    handle_exit, handle_delete_chat, handle_chat_move,
 )
 from commands.subject_commands import (
     handle_list_personas, handle_list_subjects,
@@ -88,14 +88,14 @@ class CommandHandler:
             return False, None
 
         # New subject command
-        if cmd.startswith("/new_subject"):
+        if cmd.startswith("/s_new"):
             parts = user_input.split(maxsplit=1)
             subject_name = parts[1].strip() if len(parts) > 1 else ""
             handle_new_subject(self.retriever, self.chat, subject_name)
             return False, None
 
         # New persona command
-        if cmd.startswith("/new_persona"):
+        if cmd.startswith("/p_new"):
             parts = user_input.split(maxsplit=1)
             persona_name = parts[1].strip() if len(parts) > 1 else ""
             handle_new_persona(self.retriever, self.chat, persona_name)
@@ -107,24 +107,29 @@ class CommandHandler:
             return False, prompt if prompt else None
         
         # Delete persona command
-        if cmd.startswith("/delete_persona"):
+        if cmd.startswith("/p_delete"):
             parts = user_input.split(maxsplit=1)
             persona_name = parts[1].strip() if len(parts) > 1 else ""
             handle_delete_persona(self.retriever, self.chat, persona_name)
             return False, None
 
         # Delete subject command
-        if cmd.startswith("/delete_subject"):
+        if cmd.startswith("/s_delete"):
             parts = user_input.split(maxsplit=1)
             subject_name = parts[1].strip() if len(parts) > 1 else ""
             handle_delete_subject(self.retriever, self.chat, subject_name)
             return False, None
 
         # Delete chat command
-        if cmd.startswith("/delete_chat"):
+        if cmd.startswith("/c_delete"):
             parts = user_input.split(maxsplit=1)
             idx = parts[1].strip() if len(parts) > 1 else ""
             handle_delete_chat(self.retriever, self.chat, idx)
+            return False, None
+
+        if cmd.startswith("/c_move"):
+            # No extra parsing needed; handler does interactive flow
+            handle_chat_move(self.retriever, self.chat, None)
             return False, None
 
         # Not a command, return original input

@@ -106,9 +106,9 @@ def handle_view_persona(retriever, chat):
 
 
 def handle_new_subject(retriever, chat, subject_name):
-    """Handle /new_subject command."""
+    """Handle /s_new command."""
     if not subject_name:
-        print_error("Usage: /new_subject [subject_name]")
+        print_error("Usage: /s_new [subject_name]")
         return False
 
     try:
@@ -148,9 +148,9 @@ def handle_new_subject(retriever, chat, subject_name):
 
 
 def handle_new_persona(retriever, chat, persona_name):
-    """Handle /new_persona command."""
+    """Handle /p_new command."""
     if not persona_name:
-        print("Usage: /new_persona [persona_name]")
+        print("Usage: /p_new [persona_name]")
         return False
 
     if not persona_name.replace('_', '').replace('-', '').isalnum():
@@ -226,7 +226,7 @@ def handle_persona_subject_switch(retriever, chat, user_input):
         persona_file = retriever.personas_path / f"{target_persona.lower()}.md"
         if not persona_file.exists():
             print_warning(f"Persona '{target_persona}' not found, using default")
-            print(f"\t- You can use '/new_persona {target_persona}' to create a new persona")
+            print(f"\t- You can use '/p_new {target_persona}' to create a new persona")
             actual_persona = retriever.default_persona
 
         # Validate subject folder (if not found, fall back with warning)
@@ -234,7 +234,7 @@ def handle_persona_subject_switch(retriever, chat, user_input):
         subject_folder = retriever.subjects_path / target_subject
         if not subject_folder.exists():
             print_warning(f"Subject '{target_subject}' not found, using default")
-            print(f"\t- You can use '/new_subject {target_subject}' to create a new subject")
+            print(f"\t- You can use '/s_new {target_subject}' to create a new subject")
             actual_subject = retriever.default_subject
 
         # Build new system prompt and update chat session

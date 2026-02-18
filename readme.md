@@ -18,12 +18,14 @@ There are 3 reasons for this project.
 - Allow creation of new subject / persona
 - Allow user to see and update subject and persona instructions
 - Allow user ability to delete chats, subjects, and persona
+- Allow user ability to move chats to other subjec
 
-## Updates needed reach version 1 (.v01) milestone
-- Allow user ability to move chats to other subjects
+## Updates needed reach version 1 (.v01) milestonets
 - UI update: "User:\n" and "Assistant:\n" to prompt / response
 - Allow user modify chat title
    - On save Title = 1st 10 words of chat.
+   - Format: (word_word_word)
+     - If multiple chats hav ethe same name appeand -[nn] to the end. Format: (word_word_word-01)
    - add command "/update_title"
       - display the existing title.
       - user can update the title at anytime.
