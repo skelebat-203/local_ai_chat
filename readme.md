@@ -16,22 +16,22 @@ There are 3 reasons for this project.
 - Retrieve subject instructions and chat logs
 - View chats, all chat or subject specific
 - Allow creation of new subject / persona
+- Allow user to see and update subject and persona instructions
+- Allow user ability to delete chats, subjects, and persona
 
 ## Updates needed reach version 1 (.v01) milestone
-1. Add the ability to see and update subject and persona instructions
-2. Add the ability to move chats to other subjects
-3. Add the ability to delete chats, subjects, and persona
-4. Add "User:\n" and "Assistant:\n" to prompt / response
-5. Add chat title
+- Allow user ability to move chats to other subjects
+- UI update: "User:\n" and "Assistant:\n" to prompt / response
+- Allow user modify chat title
    - On save Title = 1st 10 words of chat.
    - add command "/update_title"
       - display the existing title.
       - user can update the title at anytime.
-6. "/chat_history" and "/chat_history [subject]" better formated chat names
+- UI Update: "/chat_history" and "/chat_history [subject]" better formated chat names
    - "/chat_history" Format: [number] [title] [subject] [hh:mm] [yyyy-mm-dd]
    - "/chat_history [subject]" Format: [title] [hh:mm] [yyyy-mm-dd]
    - still want to select a chat by the displayed list item number
-7. Version 1 complete
+- Version 1 complete
 
 ### Version 2: App UI and sources
 - Add UI

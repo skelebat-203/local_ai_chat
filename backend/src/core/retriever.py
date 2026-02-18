@@ -336,3 +336,64 @@ class SubjectRetriever:
             f.write(instructions)
 
         return instructions_file
+    # in SubjectRetriever
+
+    def delete_persona(self, persona_name: str) -> bool:
+        """Delete a persona .md file (cannot delete default)."""
+        persona_name = persona_name.lower()
+        if persona_name == self.default_persona.lower():
+            print("Default persona cannot be deleted.")
+            return False
+
+        persona_file = self.personas_path / f"{persona_name}.md"
+        if not persona_file.exists():
+            print(f"Persona '{persona_name}' not found.")
+            return False
+
+        try:
+            persona_file.unlink()
+            return True
+        except Exception as e:
+            print(f"Error deleting persona: {e}")
+            return False
+
+    def delete_subject(self, subject_name: str) -> bool:
+        """Delete an entire subject folder, including chatlogs."""
+        if subject_name == self.default_subject:
+            print("Default subject cannot be deleted.")
+            return False
+
+        subject_path = self.subjects_path / subject_name
+        if not subject_path.exists():
+            print(f"Subject '{subject_name}' not found.")
+            return False
+
+        try:
+            # Delete all files and subfolders
+            for root, dirs, files in os.walk(subject_path, topdown=False):
+                root_path = Path(root)
+                for f in files:
+                    (root_path / f).unlink()
+                for d in dirs:
+                    (root_path / d).rmdir()
+            subject_path.rmdir()
+            return True
+        except Exception as e:
+            print(f"Error deleting subject: {e}")
+            return False
+
+    def delete_chat_file(self, subject_name: str, chat_filename: str) -> bool:
+        """Delete a specific chat.md file in a subject folder."""
+        subject_folder = self.subjects_path / subject_name
+        chat_path = subject_folder / chat_filename
+
+        if not chat_path.exists():
+            print(f"Chat '{chat_filename}' not found in subject '{subject_name}'.")
+            return False
+
+        try:
+            chat_path.unlink()
+            return True
+        except Exception as e:
+            print(f"Error deleting chat file: {e}")
+            return False

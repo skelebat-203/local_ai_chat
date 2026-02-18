@@ -3,13 +3,14 @@
 from commands.chat_commands import (
     handle_chat_history, handle_chat_history_by_subject,
     handle_clear_history, handle_status, handle_streaming_toggle,
-    handle_exit
+    handle_exit, handle_delete_chat
 )
 from commands.subject_commands import (
     handle_list_personas, handle_list_subjects,
     handle_new_subject, handle_new_persona,
     handle_persona_subject_switch, handle_view_subject,
-    handle_view_persona
+    handle_view_persona,handle_delete_persona,
+    handle_delete_subject
 )
 from utils.ui import print_commands
 
@@ -58,11 +59,11 @@ class CommandHandler:
             return False, None
 
         # View and update commands
-        if cmd == "/view_subject":
+        if cmd == "/s_instru":
             handle_view_subject(self.retriever, self.chat)
             return False, None
 
-        if cmd == "/view_persona":
+        if cmd == "/p_instru":
             handle_view_persona(self.retriever, self.chat)
             return False, None
 
@@ -104,6 +105,27 @@ class CommandHandler:
         prompt = handle_persona_subject_switch(self.retriever, self.chat, user_input)
         if prompt is not None:
             return False, prompt if prompt else None
+        
+        # Delete persona command
+        if cmd.startswith("/delete_persona"):
+            parts = user_input.split(maxsplit=1)
+            persona_name = parts[1].strip() if len(parts) > 1 else ""
+            handle_delete_persona(self.retriever, self.chat, persona_name)
+            return False, None
+
+        # Delete subject command
+        if cmd.startswith("/delete_subject"):
+            parts = user_input.split(maxsplit=1)
+            subject_name = parts[1].strip() if len(parts) > 1 else ""
+            handle_delete_subject(self.retriever, self.chat, subject_name)
+            return False, None
+
+        # Delete chat command
+        if cmd.startswith("/delete_chat"):
+            parts = user_input.split(maxsplit=1)
+            idx = parts[1].strip() if len(parts) > 1 else ""
+            handle_delete_chat(self.retriever, self.chat, idx)
+            return False, None
 
         # Not a command, return original input
         return False, user_input

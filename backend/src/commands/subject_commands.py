@@ -1,10 +1,12 @@
 """Subject and persona management command handlers."""
 
 from utils.ui import (
-    print_success, print_error, print_warning,
-    get_user_input, get_confirmation
+    print_success,
+    print_error,
+    print_warning,
+    get_user_input,
+    get_confirmation
 )
-
 
 def handle_list_personas(retriever):
     """Handle /personas command."""
@@ -258,3 +260,78 @@ def handle_persona_subject_switch(retriever, chat, user_input):
     except Exception as e:
         print_error(f"Unexpected error: {e}")
         return None
+
+def handle_delete_persona(retriever, chat, persona_name: str) -> bool:
+    """Handle deletepersona command."""
+    if not persona_name:
+        print_error("Usage: deletepersona persona_name")
+        return False
+
+    currentpersona = (chat.current_persona or retriever.default_persona).lower()
+    if persona_name.lower() == retriever.default_persona.lower():
+        print_error("Default persona cannot be deleted.")
+        return False
+
+    if persona_name.lower() == currentpersona:
+        printwarning("You are deleting the currently loaded persona.")
+
+    if not get_confirmation(f"Are you sure you want to delete persona '{persona_name}'?"):
+        printwarning("Delete persona cancelled.")
+        return False
+
+    success = retriever.delete_persona(persona_name)
+    if success:
+        print_success(f"Persona '{persona_name}' deleted.")
+        # If we just deleted the current persona, fall back to default
+        if persona_name.lower() == currentpersona:
+            systemprompt = retriever.buildsystemprompt(
+                retriever.default_persona,
+                chat.current_subject or retriever.default_subject,
+            )
+            chat.setsystemprompt(systemprompt)
+            chat.setsubjectinfo(retriever.default_persona,
+                                chat.current_subject or retriever.default_subject)
+            chat.clearhistory()
+            print_success("Reverted to default persona.")
+    else:
+        print_error(f"Failed to delete persona '{persona_name}'.")
+    return success
+
+
+def handle_delete_subject(retriever, chat, subject_name: str) -> bool:
+    """Handle deletesubject command."""
+    if not subject_name:
+        print_error("Usage: deletesubject subject_name")
+        return False
+
+    currentsubject = chat.current_subject or retriever.default_subject
+    if subject_name == retriever.default_subject:
+        print_error("Default subject cannot be deleted.")
+        return False
+
+    if subject_name == currentsubject:
+        printwarning("You are deleting the currently loaded subject and its chats.")
+
+    if not get_confirmation(
+        f"Are you sure you want to delete subject '{subject_name}' and all its chats?"
+    ):
+        printwarning("Delete subject cancelled.")
+        return False
+
+    success = retriever.delete_subject(subject_name)
+    if success:
+        print_success(f"Subject '{subject_name}' deleted.")
+        # If we just deleted the current subject, fall back to default
+        if subject_name == currentsubject:
+            systemprompt = retriever.buildsystemprompt(
+                chat.current_persona or retriever.default_persona,
+                retriever.default_subject,
+            )
+            chat.setsystemprompt(systemprompt)
+            chat.setsubjectinfo(chat.current_persona or retriever.default_persona,
+                                retriever.default_subject)
+            chat.clearhistory()
+            print_success("Reverted to default subject.")
+    else:
+        print_error(f"Failed to delete subject '{subject_name}'.")
+    return success

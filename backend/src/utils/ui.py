@@ -6,20 +6,29 @@ from prompt_toolkit.key_binding import KeyBindings
 COMMANDS_TEXT = f'''
 {"=" * 60}
 Commands:
+General
+• /status - Show current meta data for chat
+• /clear - Clear conversation history
+• /pref_streaming - Toggle text streaming on/off
+Keyboard Navigation 
+• UP, DOWN, LEFT, and Right arrow keys - navigate throught the prompt
+• ALT + ENTER - Submit a prompt or Save and exit
+• ESC + ENTER - Submit a prompt or Save and exit
+Create new
+• /new_subject [subject_name]- Create a new subject by entering the command followed by the subject name
+• /new_persona [persona_name] - Create a new persona by entering the command followed by the persona name
+View / Update
 • /help - List all commands
 • /personas - List available personas
 • /subjects - List available subjects
-• /status - Show current persona and subject
-• /clear - Clear conversation history
 • /chat_history - List all chats across subjects
 • /chat_history_[subject] - List chats for specific subject
-• /new_subject [subject_name]- Create a new subject by entering the command followed by the subject name
-• /new_persona [persona_name] - Create a new persona by entering the command followed by the persona name
-• /pref_streaming - Toggle text streaming on/off
-• Keyboard Navigation 
-   • UP, DOWN, LEFT, and Right arrow keys - navigate throught the prompt
-   • ALT + ENTER - Submit a prompt or Save and exit
-   • ESC + ENTER - Submit a prompt or Save and exit
+• /s_instru - view and optionally update subject instructions
+• /p_instru - view and optionally update persona instructions
+Delete
+• /delete_persona [persona_name] - Delete [persona]
+• /delete_subject [subject_name] - Delete [subject]
+• /delete_chat [chat_name] - Delete [chat]
 {"=" * 60}
 '''
 

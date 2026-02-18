@@ -3,7 +3,7 @@
 from pathlib import Path
 from utils.ui import (
     print_section_header, print_success, print_error,
-    get_user_input, display_chat_history
+    get_user_input, get_confirmation, display_chat_history
 )
 
 
@@ -141,3 +141,52 @@ def handle_exit(chat, logger):
     
     print("Goodbye!")
     return True
+
+def handle_delete_chat(retriever, chat, arg: str | None) -> bool:
+    """
+    deletechat            -> list all chats and prompt for index to delete
+    deletechat 5          -> delete chat #5 from the all-chats list
+    """
+    all_chats = retriever.list_all_chats()
+    if not all_chats:
+        printwarning("No chats found.")
+        return False
+
+    # Show numbered list similar to your chathistory output
+    for idx, (subject, filename, path) in enumerate(all_chats, start=1):
+        print(f"{idx}. {filename} [{subject}]")
+
+    if arg:
+        try:
+            choice = int(arg)
+        except ValueError:
+            print_error("deletechat expects a numeric index.")
+            return False
+    else:
+        choice_str = get_user_input("Enter the number of the chat to delete: ")
+        try:
+            choice = int(choice_str)
+        except ValueError:
+            print_error("Invalid number.")
+            return False
+
+    if choice < 1 or choice > len(all_chats):
+        print_error("Index out of range.")
+        return False
+
+    subject_name, chat_filename, path = all_chats[choice - 1]
+
+    if not get_confirmation(
+        f"Delete chat '{chat_filename}' in subject '{subject_name}'?"
+    ):
+        printwarning("Delete chat cancelled.")
+        return False
+
+    success = retriever.delete_chat_file(subject_name, chat_filename)
+    if success:
+        print_success("Chat deleted.")
+        # If this was the currently loaded chat, you might also clear in‑memory history
+        # chat.clearhistory()
+    else:
+        print_error("Failed to delete chat.")
+    return success
