@@ -39,12 +39,13 @@ def process_message(chat, user_input, text_streaming):
     print()
     
     if text_streaming:
+        print("Assistant:")
         for chunk in chat.send_message_stream(user_input):
             print(chunk, end='', flush=True)
         print()
     else:
         response = chat.send_message(user_input)
-        print(response)
+        print("Assistant:\n" + response)
 
 
 def main():

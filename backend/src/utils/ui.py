@@ -76,7 +76,7 @@ def print_warning(message):
     """Print warning message."""
     print(f"⚠ {message}")
 
-def get_user_input(prompt_text="\n> "):
+def get_user_input(prompt_text="\nUser:\n"):
     """Get user input with arrow key navigation support."""
     print("(Press Alt+Enter to submit)")
     try:
