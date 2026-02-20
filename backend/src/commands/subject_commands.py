@@ -9,13 +9,13 @@ from utils.ui import (
 )
 
 def handle_list_personas(retriever):
-    """Handle /personas command."""
+    """Handle /p command."""
     personas = retriever.list_personas()
     print(f"Available personas: {', '.join(personas)}")
 
 
 def handle_list_subjects(retriever):
-    """Handle /subjects command."""
+    """Handle /s command."""
     subjects = retriever.list_subjects()
     print(f"Available subjects: {', '.join(subjects)}")
 

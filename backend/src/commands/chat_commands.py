@@ -7,7 +7,7 @@ from utils.ui import (
 
 
 def handle_chat_history(retriever, chat):
-    """Handle /chat_history command - view all chats."""
+    """Handle /c_history command - view all chats."""
     all_chats = retriever.list_all_chats()
     if not all_chats:
         print("No chat history found.")
@@ -37,9 +37,9 @@ def handle_chat_history(retriever, chat):
 
 
 def handle_chat_history_by_subject(retriever, chat, subject_name):
-    """Handle /chat_history_[subject] command - view chats for specific subject."""
+    """Handle /c_history_[subject] command - view chats for specific subject."""
     if not subject_name:
-        print("Please specify a subject: /chat_history_[subject]")
+        print("Please specify a subject: /c_history_[subject]")
         return None
 
     chats = retriever.list_chats_by_subject(subject_name)

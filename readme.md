@@ -30,9 +30,9 @@ There are 3 reasons for this project.
    - add command "/update_title"
       - display the existing title.
       - user can update the title at anytime.
-- UI Update: "/chat_history" and "/chat_history [subject]" better formated chat names
-   - "/chat_history" Format: [number] [title] [subject] [hh:mm] [yyyy-mm-dd]
-   - "/chat_history [subject]" Format: [title] [hh:mm] [yyyy-mm-dd]
+- UI Update: "/c_history" and "/c_history [subject]" better formated chat names
+   - "/c_history" Format: [number] [title] [subject] [hh:mm] [yyyy-mm-dd]
+   - "/c_history [subject]" Format: [title] [hh:mm] [yyyy-mm-dd]
    - still want to select a chat by the displayed list item number
 - Version 1 complete
 

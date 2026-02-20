@@ -1,7 +1,7 @@
 # Log files
 *.log
 logs/
-backend/data/subjects/*/chat_*.md
+backend/data/s/*/chat_*.md
 
 # Local files
 personas/

@@ -50,20 +50,20 @@ class CommandHandler:
             return False, None
 
         # List commands
-        if cmd == "/personas":
+        if cmd == "/p":
             handle_list_personas(self.retriever)
             return False, None
 
-        if cmd == "/subjects":
+        if cmd == "/s":
             handle_list_subjects(self.retriever)
             return False, None
 
         # View and update commands
-        if cmd == "/s_instru":
+        if cmd == "/s_inst":
             handle_view_subject(self.retriever, self.chat)
             return False, None
 
-        if cmd == "/p_instru":
+        if cmd == "/p_inst":
             handle_view_persona(self.retriever, self.chat)
             return False, None
 
@@ -78,11 +78,11 @@ class CommandHandler:
             return False, None
 
         # Chat history commands
-        if cmd == "/chat_history":
+        if cmd == "/c_history":
             handle_chat_history(self.retriever, self.chat)
             return False, None
 
-        if cmd.startswith("/chat_history_"):
+        if cmd.startswith("/c_history_"):
             subject_name = user_input[14:].strip()
             handle_chat_history_by_subject(self.retriever, self.chat, subject_name)
             return False, None
