@@ -10,7 +10,7 @@ from core.chat import ChatSession
 from core.logger import ChatLogger
 from commands.command_handler import CommandHandler
 from utils.ui import print_welcome, get_user_input, print_warning
-
+ 
 
 def initialize_components():
     """Initialize all application components."""
@@ -18,8 +18,8 @@ def initialize_components():
     data_path = base_path / "data"
 
     retriever = SubjectRetriever(basepath=str(data_path))
-    chat = ChatSession(model="llama3")
-    logger = ChatLogger(basepath=str(data_path))
+    chat = ChatSession(model="llama3") # default modal
+    logger = ChatLogger(str(data_path))
 
     return retriever, chat, logger, data_path
 

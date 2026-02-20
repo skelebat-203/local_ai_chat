@@ -20,6 +20,7 @@ There are 3 reasons for this project.
 - Allow user ability to delete chats, subjects, and persona
 - Allow user ability to move chats to other subject
 - UI update: start prompt / response with "User:\n" and "Assistant:\n"
+- Allow swap between modals
 
 ## Updates needed reach version 1 (.v01) milestonets
 - Allow user modify chat title

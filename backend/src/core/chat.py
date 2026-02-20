@@ -89,3 +89,8 @@ class ChatSession:
             content = msg['content']
             log_text.append(f"{role}:\n{content}\n")
         return "\n".join(log_text)
+
+    def set_model(self, model_name: str):
+        """Swap the underlying Ollama model."""
+        self.model = model_name
+        print(f"[info] Model switched to: {model_name}") 

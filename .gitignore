@@ -3,6 +3,9 @@
 logs/
 backend/data/subjects/*/chat_*.md
 
+# Local files
+personas/
+
 # Other common excludes
 __pycache__/
 *.pyc

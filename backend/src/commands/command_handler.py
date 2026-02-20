@@ -131,6 +131,37 @@ class CommandHandler:
             # No extra parsing needed; handler does interactive flow
             handle_chat_move(self.retriever, self.chat, None)
             return False, None
+ 
+        if cmd.startswith("/swap"):
+            # formats:
+            #   /swap           -> toggle llama3 <-> qwen2.5-coder
+            #   /swap llama3    -> set explicitly
+            #   /swap qwen      -> set explicitly (short alias)
+
+            parts = user_input.split(maxsplit=1)
+            if len(parts) == 1:
+                # toggle
+                current = self.chat.model
+                if current == "llama3":
+                    new_model = "qwen2.5-coder:32b"
+                else:
+                    new_model = "llama3"
+            else:
+                # explicit target
+                target = parts[1].strip().lower()
+                if target in ("llama3", "llama"):
+                    new_model = "llama3"
+                elif target in ("qwen2.5-coder", "qwen"):
+                    new_model = "qwen2.5-coder"
+                else:
+                    print("Unknown model. Use: llama3 or qwen2.5-coder.")
+                    return False, None
+
+            self.chat.set_model(new_model)
+            # optional: clear history when swapping models
+            # self.chat.clear_history()
+
+            return False, None
 
         # Not a command, return original input
         return False, user_input

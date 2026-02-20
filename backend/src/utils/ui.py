@@ -9,6 +9,7 @@ Commands:
 General
 • /status - Show current meta data for chat
 • /clear - Clear conversation history
+• /swap - Change AI model 
 • /pref_streaming - Toggle text streaming on/off
 Keyboard Navigation 
 • UP, DOWN, LEFT, and Right arrow keys - navigate throught the prompt
