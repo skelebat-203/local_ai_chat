@@ -9,6 +9,7 @@ This module contains helper functions for:
 
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
+from core import __version__
 
 COMMANDS_TEXT = f'''
 {"=" * 60}
@@ -47,7 +48,8 @@ Delete
 
 WELCOME_TEXT = f'''
 {"=" * 60}
-Subject-Aware Chat Application (Ollama + Llama3)
+Terminal Chat (Ollama + Llama3)
+Version: {__version__}
 {"=" * 60}
 Format:
 Persona: <name>, Subject: <name>, <prompt>

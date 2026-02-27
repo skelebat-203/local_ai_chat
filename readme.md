@@ -6,6 +6,7 @@ There are 3 reasons for this project.
 
 ## Requirements
 - ollama - Core Ollama API client - enables communication with local Ollama LLM models for chat functionality
+- prompt_toolkit - Add keyboard navigation controls
 - llama3 - this is the default model the bot looks for
 - qwen2.5-coder:32b - only needed if you want to use the swap command
 - watchdog - only needed if you want to run file_watcher.  See "AI Assistant" in this doc for more info

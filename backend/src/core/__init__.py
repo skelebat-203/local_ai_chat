@@ -10,5 +10,6 @@ local chat app so callers can import them from a single place:
 from .retriever import SubjectRetriever
 from .chat import ChatSession
 from .logger import ChatLogger
+from .version import __version__
 
-__all__ = ["SubjectRetriever", "ChatSession", "ChatLogger"]
+__all__ = ["SubjectRetriever", "ChatSession", "ChatLogger", "__version__"]

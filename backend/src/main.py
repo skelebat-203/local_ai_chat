@@ -4,6 +4,8 @@ This module wires together the SubjectRetriever, ChatSession, ChatLogger,
 and CommandHandler, then runs an interactive REPL in the terminal.
 """
 
+"""Version: 1.0.0"""
+
 import sys
 from pathlib import Path
 
@@ -14,7 +16,6 @@ from core.chat import ChatSession
 from core.logger import ChatLogger
 from commands.command_handler import CommandHandler
 from utils.ui import print_welcome, get_user_input, print_warning
-
 
 def initialize_components():
     """Create and configure retriever, chat session, logger, and data path.
