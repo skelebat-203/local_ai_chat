@@ -1,275 +1,274 @@
-"""Chat-related command handlers."""
+"""Chat history and status command handlers.
+
+This module contains helpers for commands that operate on the current
+chat session and its stored conversations, including:
+
+    - /status        : Show current persona, subject, and model info
+    - /clear         : Clear in-memory conversation history
+    - /c_history     : List and preview chats across all subjects
+    - /c_history_<s> : List and preview chats for a specific subject
+    - /c_delete      : Delete a chat by index
+    - /c_move        : Move a chat between subjects
+    - /pref_streaming: Toggle streaming preference
+    - /exit          : Exit the application cleanly
+
+These functions are invoked by CommandHandler and interact with
+SubjectRetriever, ChatSession, and ChatLogger via their public APIs.
+"""
 
 from pathlib import Path
+
 from utils.ui import (
-    print_section_header, print_success, print_error,
-    get_user_input, get_confirmation, display_chat_history)
+    print_success,
+    print_error,
+    print_warning,
+    print_section_header,
+    get_confirmation,
+    display_chat_history,
+)
 
 
-def handle_chat_history(retriever, chat):
-    """Handle /c_history command - view all chats."""
-    all_chats = retriever.list_all_chats()
-    if not all_chats:
-        print("No chat history found.")
-        return None
+def handle_status(chat, text_streaming: bool) -> None:
+    """Show current chat metadata such as persona, subject, model, and streaming.
 
-    print_section_header("All Chat History")
-    for idx, chat_info in enumerate(all_chats, 1):
-        subject, filename, file_path = chat_info
-        print(f"{idx}. [{subject}] {filename}")
-    print("=" * 60)
+    Args:
+        chat: ChatSession instance with current state.
+        text_streaming: Flag indicating whether streaming is enabled.
+    """
+    print_section_header("Status")
+    persona = getattr(chat, "current_persona", None) or "None"
+    subject = getattr(chat, "current_subject", None) or "None"
+    model = getattr(chat, "model", "unknown")
 
-    try:
-        selection = get_user_input("\nEnter number to open chat (or press Enter to cancel): ")
-        if not selection:
-            return None
-
-        chat_idx = int(selection) - 1
-        if 0 <= chat_idx < len(all_chats):
-            subject, filename, file_path = all_chats[chat_idx]
-            return _load_chat_file(retriever, chat, file_path, subject, filename)
-        else:
-            print("Invalid selection.")
-            return None
-    except ValueError:
-        print("Invalid input.")
-        return None
-
-
-def handle_chat_history_by_subject(retriever, chat, subject_name):
-    """Handle /c_history_[subject] command - view chats for specific subject."""
-    if not subject_name:
-        print("Please specify a subject: /c_history_[subject]")
-        return None
-
-    chats = retriever.list_chats_by_subject(subject_name)
-    if not chats:
-        print(f"No chat history found for subject '{subject_name}'.")
-        return None
-
-    print_section_header(f"Chat History for: {subject_name}")
-    for idx, chat_info in enumerate(chats, 1):
-        filename, file_path = chat_info
-        print(f"{idx}. {filename}")
-    print("=" * 60)
-
-    try:
-        selection = get_user_input("\nEnter number to open chat (or press Enter to cancel): ")
-        if not selection:
-            return None
-
-        chat_idx = int(selection) - 1
-        if 0 <= chat_idx < len(chats):
-            filename, file_path = chats[chat_idx]
-            return _load_chat_file(retriever, chat, file_path, subject_name, filename)
-        else:
-            print("Invalid selection.")
-            return None
-    except ValueError:
-        print("Invalid input.")
-        return None
-
-
-def _load_chat_file(retriever, chat, file_path, subject_name, filename):
-    """Helper function to load a chat file."""
-    loaded_history = retriever.load_chat_file(file_path)
-    chat.load_history(loaded_history)
-
-    system_prompt = retriever.build_system_prompt(retriever.default_persona, subject_name)
-    chat.set_system_prompt(system_prompt)
-    chat.set_subject_info(retriever.default_persona, subject_name)
-
-    print_success(f"Loaded chat from {filename}")
-    print_success(f"Subject: {subject_name}")
-    print_success("You can now continue this conversation")
-
-    display_chat_history(loaded_history)
-
-    chat.original_chat_file = file_path
-    return True
-
-
-def handle_clear_history(chat):
-    """Handle /clear command."""
-    chat.clear_history()
-    print_success("Conversation history cleared")
-
-
-def handle_status(chat, text_streaming):
-    """Handle /status command."""
-    persona = chat.current_persona or "None"
-    subject = chat.current_subject or "None"
-    streaming_status = "on" if text_streaming else "off"
     print(f"Persona: {persona}")
-    print(f"Current Subject: {subject}")
-    print(f"Model: {chat.model}")
-    print(f"Text Streaming: {streaming_status}")
+    print(f"Subject: {subject}")
+    print(f"Model:   {model}")
+    print(f"Streaming: {'on' if text_streaming else 'off'}")
 
 
-def handle_streaming_toggle(text_streaming):
-    """Handle /pref_streaming command."""
-    current_state = "on" if text_streaming else "off"
-    target_state = "off" if text_streaming else "on"
+def handle_clear_history(chat) -> None:
+    """Clear the in-memory conversation history for the current chat session.
 
-    response = get_user_input(f"Turn text streaming {target_state}? 'y' / 'n'? ").lower()
-
-    if response == 'y':
-        text_streaming = not text_streaming
-        new_state = "on" if text_streaming else "off"
-        print(f"Text streaming is now {new_state}. What would you like to discuss?")
-    elif response == 'n':
-        print("No change. What would you like to discuss?")
-    else:
-        print("Invalid response. No change made.")
-
-    return text_streaming
-
-
-def handle_exit(chat, logger):
-    """Handle /exit command."""
-    if chat.current_subject and chat.conversation_history:
-        from utils.ui import get_confirmation, print_success
-        
-        if get_confirmation(f"Save chat to '{chat.current_subject}'?"):
-            log_file = logger.save_chat(chat.current_subject, chat.conversation_history)
-            print_success(f"Chat saved to {log_file}")
-
-            if hasattr(chat, 'original_chat_file') and chat.original_chat_file.exists():
-                chat.original_chat_file.unlink()
-                print_success(f"Removed old chat file: {chat.original_chat_file.name}")
-    
-    print("Goodbye!")
-    return True
-
-def handle_delete_chat(retriever, chat, arg: str | None) -> bool:
+    Args:
+        chat: ChatSession instance to clear.
     """
-    deletechat            -> list all chats and prompt for index to delete
-    deletechat 5          -> delete chat #5 from the all-chats list
+    chat.clear_history()
+    print_success("Conversation history cleared.")
+
+
+def _select_chat_from_list(chats):
+    """Helper to let the user pick a chat from a list by index.
+
+    Args:
+        chats: List of tuples describing chats. For /c_history this is:
+               (subject_name, chat_filename, file_path)
+               For /c_history_<subject> this is:
+               (chat_filename, file_path)
+
+    Returns:
+        The selected tuple from `chats`, or None if selection was cancelled
+        or invalid.
     """
-    all_chats = retriever.list_all_chats()
-    if not all_chats:
-        printwarning("No chats found.")
-        return False
+    if not chats:
+        print_warning("No chats found.")
+        return None
 
-    # Show numbered list similar to your chathistory output
-    for idx, (subject, filename, path) in enumerate(all_chats, start=1):
-        print(f"{idx}. {filename} [{subject}]")
+    for idx, entry in enumerate(chats, start=1):
+        if len(entry) == 3:
+            subject_name, chat_filename, _ = entry
+            print(f"{idx}. [{subject_name}] {chat_filename}")
+        else:
+            chat_filename, _ = entry
+            print(f"{idx}. {chat_filename}")
 
-    if arg:
-        try:
-            choice = int(arg)
-        except ValueError:
-            print_error("deletechat expects a numeric index.")
-            return False
+    choice = input("\nEnter number to view (or press Enter to cancel): ").strip()
+    if not choice:
+        print_warning("Selection cancelled.")
+        return None
+
+    if not choice.isdigit():
+        print_error("Invalid selection.")
+        return None
+
+    index = int(choice)
+    if not (1 <= index <= len(chats)):
+        print_error("Selection out of range.")
+        return None
+
+    return chats[index - 1]
+
+
+def handle_chat_history(retriever, chat) -> None:
+    """Handle /c_history: list and preview chats across all subjects.
+
+    Shows a numbered list of all chat files returned by
+    SubjectRetriever.list_all_chats, then lets the user choose one
+    to load and preview its contents in the terminal.
+
+    Args:
+        retriever: SubjectRetriever used to discover chat files.
+        chat: ChatSession instance (used only for display context).
+    """
+    print_section_header("All Chats")
+    chats = retriever.list_all_chats()
+    selected = _select_chat_from_list(chats)
+    if not selected:
+        return
+
+    subject_name, chat_filename, file_path = selected
+    print_success(f"Loading chat '{chat_filename}' from subject '{subject_name}'")
+
+    history = retriever.load_chat_file(file_path)
+    if not history:
+        print_warning("Chat file is empty or could not be parsed.")
+        return
+
+    display_chat_history(history)
+
+
+def handle_chat_history_by_subject(retriever, chat, subject_name: str) -> None:
+    """Handle /c_history_<subject>: list and preview chats for one subject.
+
+    Args:
+        retriever: SubjectRetriever used to discover chat files.
+        chat: ChatSession instance (used only for display context).
+        subject_name: Name of the subject whose chats should be listed.
+    """
+    if not subject_name:
+        print_error("Usage: /c_history_[subject]")
+        return
+
+    print_section_header(f"Chats for subject: {subject_name}")
+    chats = retriever.list_chats_by_subject(subject_name)
+    selected = _select_chat_from_list(chats)
+    if not selected:
+        return
+
+    chat_filename, file_path = selected
+    print_success(f"Loading chat '{chat_filename}'")
+
+    history = retriever.load_chat_file(file_path)
+    if not history:
+        print_warning("Chat file is empty or could not be parsed.")
+        return
+
+    display_chat_history(history)
+
+
+def handle_delete_chat(retriever, chat, idx: str) -> None:
+    """Handle /c_delete: delete a chat by its index from the global list.
+
+    This presents the same list as /c_history, but deletes the chosen
+    chat file instead of viewing it.
+
+    Args:
+        retriever: SubjectRetriever used to list and delete chat files.
+        chat: ChatSession instance (unused but kept for symmetry).
+        idx: Optional index argument provided after the command. If empty,
+             the user will be prompted interactively.
+    """
+    chats = retriever.list_all_chats()
+    if not chats:
+        print_warning("No chats found.")
+        return
+
+    if idx and idx.isdigit():
+        index = int(idx)
+        if not (1 <= index <= len(chats)):
+            print_error("Index out of range.")
+            return
+        selected = chats[index - 1]
     else:
-        choice_str = get_user_input("Enter the number of the chat to delete: ")
-        try:
-            choice = int(choice_str)
-        except ValueError:
-            print_error("Invalid number.")
-            return False
+        print_section_header("Delete Chat")
+        selected = _select_chat_from_list(chats)
+        if not selected:
+            return
 
-    if choice < 1 or choice > len(all_chats):
-        print_error("Index out of range.")
-        return False
-
-    subject_name, chat_filename, path = all_chats[choice - 1]
+    subject_name, chat_filename, file_path = selected
 
     if not get_confirmation(
-        f"Delete chat '{chat_filename}' in subject '{subject_name}'?"
+        f"Are you sure you want to delete '{chat_filename}' from subject '{subject_name}'?"
     ):
-        printwarning("Delete chat cancelled.")
-        return False
+        print_warning("Delete chat cancelled.")
+        return
 
     success = retriever.delete_chat_file(subject_name, chat_filename)
     if success:
-        print_success("Chat deleted.")
-        # If this was the currently loaded chat, you might also clear in‑memory history
-        # chat.clearhistory()
+        print_success(f"Deleted chat '{chat_filename}'.")
     else:
-        print_error("Failed to delete chat.")
-    return success
+        print_error(f"Failed to delete chat '{chat_filename}'.")
 
-def handle_chat_move(retriever, chat, arg: str | None) -> bool:
+
+def handle_chat_move(retriever, chat, _unused) -> None:
+    """Handle /c_move: move a chat file from one subject to another.
+
+    The user is first shown a list of all chats across subjects, selects
+    one, and is then prompted for a target subject name. A new subject
+    folder is created if needed.
+
+    Args:
+        retriever: SubjectRetriever used to list and move chat files.
+        chat: ChatSession instance (unused but kept for symmetry).
+        _unused: Placeholder arg (CommandHandler currently passes None).
     """
-    Handle /c_move command.
+    chats = retriever.list_all_chats()
+    if not chats:
+        print_warning("No chats found.")
+        return
 
-    Flow:
-    1. Show numbered list of all chats: [subject] [chat_title]
-    2. Prompt: "Enter the number of the chat to move or 'n' to exit: "
-    3. On valid selection, show subjects list and prompt:
-       "Enter the number of the subject to move to or 'n' to exit: "
-    4. Perform move and inform user.
-    """
-    # 1. Get all chats
-    all_chats = retriever.list_all_chats()
-    if not all_chats:
-        printwarning("No chats found.")
-        return False
+    print_section_header("Move Chat")
+    selected = _select_chat_from_list(chats)
+    if not selected:
+        return
 
-    print_section_header("Move Chat to Another Subject")
+    source_subject, chat_filename, file_path = selected
+    target_subject = input("Enter target subject name: ").strip()
 
-    # Display numbered list: [subject] [chat_title]
-    # list_all_chats returns (subject, filename, filepath)
-    for idx, (subject, filename, _path) in enumerate(all_chats, start=1):
-        # For now, treat filename as the "title" (you can later swap in a parsed title)
-        print(f"{idx}. [{subject}] {filename}")
+    if not target_subject:
+        print_error("Target subject name cannot be empty.")
+        return
 
-    # 2. Ask which chat to move
-    while True:
-        choice_str = get_user_input("Enter the number of the chat to move or 'n' to exit: ")
-        if choice_str.lower() == "n":
-            # Exit and allow normal prompting
-            return False
+    if not get_confirmation(
+        f"Move '{chat_filename}' from '{source_subject}' to '{target_subject}'?"
+    ):
+        print_warning("Move chat cancelled.")
+        return
 
-        try:
-            choice = int(choice_str)
-        except ValueError:
-            printerror("Invalid number.")
-            continue
-
-        if choice < 1 or choice > len(all_chats):
-            printerror("Invalid number.")
-            continue
-
-        # Valid chat selected
-        source_subject, chat_filename, chat_path = all_chats[choice - 1]
-        break
-
-    # 3. Show available subjects
-    subjects = retriever.list_subjects()
-    if not subjects:
-        printwarning("No subjects available to move into.")
-        return False
-
-    print_section_header("Available Subjects")
-    for idx, subject in enumerate(subjects, start=1):
-        print(f"{idx}. {subject}")
-
-    # Ask which subject to move into
-    while True:
-        subject_choice_str = get_user_input("Enter the number of the subject to move to or 'n' to exit: ")
-        if subject_choice_str.lower() == "n":
-            return False
-
-        try:
-            subject_choice = int(subject_choice_str)
-        except ValueError:
-            printerror("Invalid number.")
-            continue
-
-        if subject_choice < 1 or subject_choice > len(subjects):
-            printerror("Invalid number.")
-            continue
-
-        target_subject = subjects[subject_choice - 1]
-        break
-
-    # 4. Perform the move
     success = retriever.move_chat_to_subject(source_subject, chat_filename, target_subject)
     if success:
-        printsuccess(f"{chat_filename} moved to {target_subject}")
-        return True
+        print_success(f"Moved '{chat_filename}' to subject '{target_subject}'.")
     else:
-        printerror("Failed to move chat.")
-        return False
+        print_error(f"Failed to move chat '{chat_filename}'.")
+
+
+def handle_streaming_toggle(current_value: bool) -> bool:
+    """Toggle the streaming preference and report the new state.
+
+    Args:
+        current_value: Current boolean value of the streaming flag.
+
+    Returns:
+        The toggled boolean value.
+    """
+    new_value = not current_value
+    state = "enabled" if new_value else "disabled"
+    print_success(f"Text streaming {state}.")
+    return new_value
+
+
+def handle_exit(chat, logger) -> bool:
+    """Handle /exit: perform any final actions and signal the app to quit.
+
+    Currently this just prints a message and returns True so that the
+    main loop can terminate. It is a placeholder to hook in any future
+    "save on exit" logic using the logger if needed.
+
+    Args:
+        chat: ChatSession instance (currently unused).
+        logger: ChatLogger instance (currently unused).
+
+    Returns:
+        True, indicating the caller should exit the application.
+    """
+    print_success("Exiting chat. Goodbye!")
+    return True

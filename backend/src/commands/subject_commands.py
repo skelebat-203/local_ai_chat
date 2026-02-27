@@ -1,40 +1,47 @@
-"""Subject and persona management command handlers."""
+"""Subject and persona management command handlers.
+
+These helpers implement the interactive flows for:
+    - listing personas and subjects
+    - viewing and editing persona/subject instructions
+    - creating new personas and subjects
+    - switching persona/subject inline
+    - deleting personas, subjects, and handling fallbacks
+"""
 
 from utils.ui import (
     print_success,
     print_error,
     print_warning,
     get_user_input,
-    get_confirmation
+    get_confirmation,
 )
 
+
 def handle_list_personas(retriever):
-    """Handle /p command."""
+    """Handle /p command: list all available personas."""
     personas = retriever.list_personas()
     print(f"Available personas: {', '.join(personas)}")
 
 
 def handle_list_subjects(retriever):
-    """Handle /s command."""
+    """Handle /s command: list all available subjects."""
     subjects = retriever.list_subjects()
     print(f"Available subjects: {', '.join(subjects)}")
 
 
 def handle_view_subject(retriever, chat):
-    """Handle /view_subject command - view and optionally update subject instructions."""
+    """Handle /s_inst: view and optionally update subject instructions."""
     current_subject = chat.current_subject or retriever.default_subject
 
     print(f"\n=== Subject: {current_subject} ===\n")
 
     try:
-        # Load current instructions
         instructions = retriever.load_subject_instructions(current_subject)
         print("Current Instructions:")
         print("-" * 50)
         print(instructions)
         print("-" * 50)
 
-        # Ask if user wants to update
         if get_confirmation("\nDo you want to update these instructions?"):
             print("\nEnter new instructions (press Enter when done):\n")
             new_instructions = get_user_input("> ")
@@ -44,7 +51,6 @@ def handle_view_subject(retriever, chat):
                 if success:
                     print_success("Subject instructions updated successfully.")
 
-                    # Rebuild system prompt with new instructions
                     current_persona = chat.current_persona or retriever.default_persona
                     system_prompt = retriever.build_system_prompt(current_persona, current_subject)
                     chat.set_system_prompt(system_prompt)
@@ -61,25 +67,22 @@ def handle_view_subject(retriever, chat):
 
 
 def handle_view_persona(retriever, chat):
-    """Handle /view_persona command - view and optionally update persona instructions."""
+    """Handle /p_inst: view and optionally update persona instructions."""
     current_persona = chat.current_persona or retriever.default_persona
     is_default = current_persona.lower() == retriever.default_persona.lower()
 
     print(f"\n=== Persona: {current_persona} ===\n")
 
     try:
-        # Load current persona instructions
         persona_instructions = retriever.load_persona(current_persona)
         print("Current Instructions:")
         print("-" * 50)
         print(persona_instructions)
         print("-" * 50)
 
-        # Only allow editing if not default persona
         if is_default:
             print("\n⚠ Default persona cannot be updated.")
         else:
-            # Ask if user wants to update
             if get_confirmation("\nDo you want to update these instructions?"):
                 print("\nEnter new instructions (press Enter when done):\n")
                 new_instructions = get_user_input("> ")
@@ -89,7 +92,6 @@ def handle_view_persona(retriever, chat):
                     if success:
                         print_success("Persona instructions updated successfully.")
 
-                        # Rebuild system prompt with new instructions
                         current_subject = chat.current_subject or retriever.default_subject
                         system_prompt = retriever.build_system_prompt(current_persona, current_subject)
                         chat.set_system_prompt(system_prompt)
@@ -106,7 +108,7 @@ def handle_view_persona(retriever, chat):
 
 
 def handle_new_subject(retriever, chat, subject_name):
-    """Handle /s_new command."""
+    """Handle /s_new command: create a new subject and optional instructions."""
     if not subject_name:
         print_error("Usage: /s_new [subject_name]")
         return False
@@ -148,12 +150,12 @@ def handle_new_subject(retriever, chat, subject_name):
 
 
 def handle_new_persona(retriever, chat, persona_name):
-    """Handle /p_new command."""
+    """Handle /p_new command: create a new persona and its instructions."""
     if not persona_name:
         print("Usage: /p_new [persona_name]")
         return False
 
-    if not persona_name.replace('_', '').replace('-', '').isalnum():
+    if not persona_name.replace("_", "").replace("-", "").isalnum():
         print_error("Persona name must be alphanumeric (underscores and hyphens allowed)")
         return False
 
@@ -173,7 +175,7 @@ def handle_new_persona(retriever, chat, persona_name):
             print_error("Persona description cannot be empty")
             return False
 
-        with open(persona_file, 'w', encoding='utf-8') as f:
+        with open(persona_file, "w", encoding="utf-8") as f:
             f.write(persona_description)
 
         print("\nPersona description saved.")
@@ -194,34 +196,32 @@ def handle_new_persona(retriever, chat, persona_name):
 
 
 def handle_persona_subject_switch(retriever, chat, user_input):
-    """
-    Handle persona/subject switching via flexible formats, for example:
-      - "Persona: X"
-      - "Subject: Y"
-      - "Persona: X, Subject: Y"
-      - "Persona: X, Subject: Y, prompt"
-      - "Subject: Y, Persona: X, prompt"
+    """Handle inline persona/subject switching in free-form user input.
+
+    Supports flexible formats like:
+        - "Persona: X"
+        - "Subject: Y"
+        - "Persona: X, Subject: Y"
+        - "Persona: X, Subject: Y, prompt"
+        - "Subject: Y, Persona: X, prompt"
 
     Returns:
-        None      -> if no persona/subject keywords found (treat as normal input)
-        ""        -> if it was a meta-only line (switch only, no prompt to send)
-        <prompt>  -> if there is remaining prompt text after switching
+        None   -> if no persona/subject keywords found (treat as normal input)
+        ""     -> if it was a meta-only line (switch only, no prompt to send)
+        prompt -> if there is remaining prompt text after switching.
     """
     persona, subject, prompt, is_meta_only = retriever.parse_subject_command(user_input)
 
-    # If neither persona nor subject was found, this is not a switch command
     if persona is None and subject is None:
         return None
 
     try:
-        # Determine the target persona and subject, falling back to current/default
         current_persona = chat.current_persona or retriever.default_persona
         current_subject = chat.current_subject or retriever.default_subject
 
         target_persona = persona if persona is not None else current_persona
         target_subject = subject if subject is not None else current_subject
 
-        # Validate persona file (if not default/found, fall back with warning)
         actual_persona = target_persona
         persona_file = retriever.personas_path / f"{target_persona.lower()}.md"
         if not persona_file.exists():
@@ -229,7 +229,6 @@ def handle_persona_subject_switch(retriever, chat, user_input):
             print(f"\t- You can use '/p_new {target_persona}' to create a new persona")
             actual_persona = retriever.default_persona
 
-        # Validate subject folder (if not found, fall back with warning)
         actual_subject = target_subject
         subject_folder = retriever.subjects_path / target_subject
         if not subject_folder.exists():
@@ -237,7 +236,6 @@ def handle_persona_subject_switch(retriever, chat, user_input):
             print(f"\t- You can use '/s_new {target_subject}' to create a new subject")
             actual_subject = retriever.default_subject
 
-        # Build new system prompt and update chat session
         system_prompt = retriever.build_system_prompt(actual_persona, actual_subject)
         chat.set_system_prompt(system_prompt)
         chat.set_subject_info(actual_persona, actual_subject)
@@ -246,13 +244,9 @@ def handle_persona_subject_switch(retriever, chat, user_input):
         print_success(f"Loaded Persona: {actual_persona}")
         print_success(f"Loaded Subject: {actual_subject}")
 
-        # Item 3: meta vs "switch + prompt"
         if is_meta_only:
-            # Just switch persona/subject; no prompt to send
             return ""
-        else:
-            # Switch and then treat remaining text as the user's prompt
-            return prompt if prompt else ""
+        return prompt if prompt else ""
 
     except FileNotFoundError as e:
         print_error(f"Error: {e}")
@@ -261,37 +255,39 @@ def handle_persona_subject_switch(retriever, chat, user_input):
         print_error(f"Unexpected error: {e}")
         return None
 
+
 def handle_delete_persona(retriever, chat, persona_name: str) -> bool:
-    """Handle deletepersona command."""
+    """Handle /p_delete: delete an existing persona and reset if needed."""
     if not persona_name:
-        print_error("Usage: deletepersona persona_name")
+        print_error("Usage: /p_delete [persona_name]")
         return False
 
-    currentpersona = (chat.current_persona or retriever.default_persona).lower()
+    current_persona = (chat.current_persona or retriever.default_persona).lower()
     if persona_name.lower() == retriever.default_persona.lower():
         print_error("Default persona cannot be deleted.")
         return False
 
-    if persona_name.lower() == currentpersona:
-        printwarning("You are deleting the currently loaded persona.")
+    if persona_name.lower() == current_persona:
+        print_warning("You are deleting the currently loaded persona.")
 
     if not get_confirmation(f"Are you sure you want to delete persona '{persona_name}'?"):
-        printwarning("Delete persona cancelled.")
+        print_warning("Delete persona cancelled.")
         return False
 
     success = retriever.delete_persona(persona_name)
     if success:
         print_success(f"Persona '{persona_name}' deleted.")
-        # If we just deleted the current persona, fall back to default
-        if persona_name.lower() == currentpersona:
-            systemprompt = retriever.buildsystemprompt(
+        if persona_name.lower() == current_persona:
+            system_prompt = retriever.build_system_prompt(
                 retriever.default_persona,
                 chat.current_subject or retriever.default_subject,
             )
-            chat.setsystemprompt(systemprompt)
-            chat.setsubjectinfo(retriever.default_persona,
-                                chat.current_subject or retriever.default_subject)
-            chat.clearhistory()
+            chat.set_system_prompt(system_prompt)
+            chat.set_subject_info(
+                retriever.default_persona,
+                chat.current_subject or retriever.default_subject,
+            )
+            chat.clear_history()
             print_success("Reverted to default persona.")
     else:
         print_error(f"Failed to delete persona '{persona_name}'.")
@@ -299,38 +295,39 @@ def handle_delete_persona(retriever, chat, persona_name: str) -> bool:
 
 
 def handle_delete_subject(retriever, chat, subject_name: str) -> bool:
-    """Handle deletesubject command."""
+    """Handle /s_delete: delete a subject folder and its chats."""
     if not subject_name:
-        print_error("Usage: deletesubject subject_name")
+        print_error("Usage: /s_delete [subject_name]")
         return False
 
-    currentsubject = chat.current_subject or retriever.default_subject
+    current_subject = chat.current_subject or retriever.default_subject
     if subject_name == retriever.default_subject:
         print_error("Default subject cannot be deleted.")
         return False
 
-    if subject_name == currentsubject:
-        printwarning("You are deleting the currently loaded subject and its chats.")
+    if subject_name == current_subject:
+        print_warning("You are deleting the currently loaded subject and its chats.")
 
     if not get_confirmation(
         f"Are you sure you want to delete subject '{subject_name}' and all its chats?"
     ):
-        printwarning("Delete subject cancelled.")
+        print_warning("Delete subject cancelled.")
         return False
 
     success = retriever.delete_subject(subject_name)
     if success:
         print_success(f"Subject '{subject_name}' deleted.")
-        # If we just deleted the current subject, fall back to default
-        if subject_name == currentsubject:
-            systemprompt = retriever.buildsystemprompt(
+        if subject_name == current_subject:
+            system_prompt = retriever.build_system_prompt(
                 chat.current_persona or retriever.default_persona,
                 retriever.default_subject,
             )
-            chat.setsystemprompt(systemprompt)
-            chat.setsubjectinfo(chat.current_persona or retriever.default_persona,
-                                retriever.default_subject)
-            chat.clearhistory()
+            chat.set_system_prompt(system_prompt)
+            chat.set_subject_info(
+                chat.current_persona or retriever.default_persona,
+                retriever.default_subject,
+            )
+            chat.clear_history()
             print_success("Reverted to default subject.")
     else:
         print_error(f"Failed to delete subject '{subject_name}'.")

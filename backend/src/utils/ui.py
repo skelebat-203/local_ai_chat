@@ -1,4 +1,11 @@
-"""UI utilities for terminal interface."""
+"""UI utilities for the terminal interface.
+
+This module contains helper functions for:
+    - Printing formatted messages and section headers
+    - Rendering welcome and commands help text
+    - Collecting user input with prompt_toolkit
+    - Displaying previous chat history in a readable format
+"""
 
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
@@ -52,38 +59,66 @@ Note: You can chat immediately without setting persona/subject.
 
 
 def print_welcome():
-    """Print welcome message."""
+    """Print the initial welcome banner for the application."""
     print(WELCOME_TEXT)
 
 
 def print_commands():
-    """Print available commands."""
+    """Print the list of available slash commands and keyboard shortcuts."""
     print(COMMANDS_TEXT)
 
 
-def print_section_header(title):
-    """Print a formatted section header."""
+def print_section_header(title: str):
+    """Print a formatted section header with a title.
+
+    Args:
+        title: Text to show as the section title.
+    """
     print("\n" + "=" * 60)
     print(title)
     print("=" * 60)
 
 
-def print_success(message):
-    """Print success message."""
+def print_success(message: str):
+    """Print a success message with a checkmark prefix.
+
+    Args:
+        message: Message text to display.
+    """
     print(f"✓ {message}")
 
 
-def print_error(message):
-    """Print error message."""
+def print_error(message: str):
+    """Print an error message with a cross prefix.
+
+    Args:
+        message: Message text to display.
+    """
     print(f"✗ {message}")
 
 
-def print_warning(message):
-    """Print warning message."""
+def print_warning(message: str):
+    """Print a warning message with a warning icon prefix.
+
+    Args:
+        message: Message text to display.
+    """
     print(f"⚠ {message}")
 
-def get_user_input(prompt_text="\nUser:\n"):
-    """Get user input with arrow key navigation support."""
+
+def get_user_input(prompt_text: str = "\nUser:\n") -> str:
+    """Get multi‑line user input with basic arrow-key navigation.
+
+    Shows a small hint about how to submit, then uses prompt_toolkit
+    to collect a (possibly multi‑line) string.
+
+    Args:
+        prompt_text: Prompt label shown above the input area.
+
+    Returns:
+        The trimmed user input. Returns an empty string on Ctrl+C,
+        or the literal string "exit" on EOF (Ctrl+D).
+    """
     print("(Press Alt+Enter to submit)")
     try:
         user_input = prompt(prompt_text, multiline=True)
@@ -93,17 +128,29 @@ def get_user_input(prompt_text="\nUser:\n"):
     except EOFError:
         return "exit"
 
-def get_confirmation(message):
-    """Get yes/no confirmation from user."""
+
+def get_confirmation(message: str) -> bool:
+    """Prompt the user for a yes/no confirmation.
+
+    Args:
+        message: Question to display.
+
+    Returns:
+        True if the user answers 'y', False otherwise.
+    """
     response = input(f"{message} (y/n): ").lower().strip()
-    return response == 'y'
+    return response == "y"
 
 
 def display_chat_history(history):
-    """Display formatted chat history."""
+    """Display formatted chat history in the terminal.
+
+    Args:
+        history: Iterable of message dicts with 'role' and 'content' keys.
+    """
     print_section_header("Previous Chat:")
     for msg in history:
-        role = msg['role'].capitalize()
-        content = msg['content']
+        role = msg["role"].capitalize()
+        content = msg["content"]
         print(f"\n{role}: {content}")
     print("\n" + "=" * 60)
